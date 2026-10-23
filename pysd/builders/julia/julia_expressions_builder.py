@@ -66,19 +66,20 @@ LOGIC_OPS: dict = {
 # Keys are matched after .upper(), so include both "SPACE FORM" and "UNDERSCORE_FORM"
 # because the Vensim parser may store names either way.
 BUILTIN_FUNCTIONS: dict = {
-    # Basic math
+    # Basic math.  pysd_exp, pysd_ln, pysd_sin...: the C maths library, as in
+    # Python PySD (Julia's own functions differ in the last digit)
     "ABS": "abs",
-    "EXP": "exp",
+    "EXP": "pysd_exp",
     "LN": "pysd_ln",
     "SQRT": "pysd_sqrt",
-    "SIN": "sin",
-    "COS": "cos",
-    "TAN": "tan",
+    "SIN": "pysd_sin",
+    "COS": "pysd_cos",
+    "TAN": "pysd_tan",
     "ARCSIN": "pysd_asin",
     "ARCCOS": "pysd_acos",
-    "ARCTAN": "atan",
-    "SINH": "sinh",
-    "COSH": "cosh",
+    "ARCTAN": "pysd_atan",
+    "SINH": "pysd_sinh",
+    "COSH": "pysd_cosh",
     "TANH": "tanh",
     "INTEGER": "pysd_trunc",
     "INT": "pysd_trunc",
@@ -93,7 +94,8 @@ BUILTIN_FUNCTIONS: dict = {
     "IF THEN ELSE": "pysd_ifelse",
     "IF_THEN_ELSE": "pysd_ifelse",
     # Array operations
-    "SUM": "sum",
+    # numpy's pairwise order, as Python PySD (PySD.jl)
+    "SUM": "pysd_sum",
     "PROD": "prod",
     "VMAX": "maximum",
     "VMIN": "minimum",
@@ -148,8 +150,9 @@ BUILTIN_FUNCTIONS: dict = {
 # (e.g. to pull in ``pysd_trunc`` when ``pysd_quantum`` is used).
 HELPER_IMPLEMENTATIONS: frozenset = frozenset({
     "pysd_trunc", "pysd_log_base", "pysd_xidz", "pysd_zidz",
+    "pysd_exp", "pysd_sin", "pysd_cos", "pysd_tan", "pysd_atan", "pysd_sinh", "pysd_cosh",
     "pysd_pulse", "pysd_pulse_train", "pysd_ramp", "pysd_step",
-    "pysd_active_initial", "pysd_ifelse",
+    "pysd_active_initial", "pysd_ifelse", "pysd_sum",
     "pysd_inv_mat2d_elem", "pysd_inv_mat3d_elem",
     "pysd_power", "pysd_quantum", "pysd_pi",
     "pysd_xpulse", "pysd_xpulse_train", "pysd_xramp",
@@ -386,6 +389,39 @@ class JuliaASTVisitor:
 
         _scan(node)
         return result
+
+    def _summed_subs_last(self, node) -> bool:
+        """Whether the summed (!) subscripts are the last dimensions of the
+        array Python PySD sums: xarray puts the dimensions of each operand
+        after the ones already there, so x[A, B!] * y[B!] is (A, B!) and
+        y[B!] * x[A, B!] is (B!, A).  Elements (x[a1, B!]) are no dimension."""
+        order: List[str] = []
+
+        def _subs(ref) -> List[str]:
+            subs = getattr(ref, "subscripts", None)
+            return list(subs.subscripts) if subs is not None and hasattr(subs, "subscripts") else []
+
+        def _scan(n: Any) -> None:
+            if isinstance(n, ReferenceStructure):
+                found = _subs(n)
+            elif isinstance(n, CallStructure):
+                found = _subs(n.function)
+            else:
+                found = []
+            for sub in found:
+                clean = re.sub(r"[^a-z0-9_]", "_", sub.rstrip("!").lower())
+                is_dim = sub.endswith("!") or sub in self.subs_sizes or \
+                    clean in self._clean_subs_sizes
+                if is_dim and sub not in order:
+                    order.append(sub)
+            if isinstance(n, (CallStructure, ArithmeticStructure, LogicStructure)):
+                for arg in n.arguments:
+                    _scan(arg)
+
+        _scan(node)
+        summed = [k for k, sub in enumerate(order) if sub.endswith("!")]
+        kept = [k for k, sub in enumerate(order) if not sub.endswith("!")]
+        return not kept or not summed or max(kept) < min(summed)
 
     def _with_extra_subs(self, extra: Dict[str, str]) -> "JuliaASTVisitor":
         """Return a child visitor with *extra* entries added to active_subs."""
@@ -1320,7 +1356,7 @@ class JuliaASTVisitor:
         # sum/prod/vmax/vmin with ! subscripts: generate ONE comprehension that
         # covers ALL references sharing the same ! dim, rather than separate
         # per-reference comprehensions that would be multiplied/added as arrays.
-        if julia_func in ("sum", "prod", "maximum", "minimum") and len(node.arguments) == 1:
+        if julia_func in ("pysd_sum", "prod", "maximum", "minimum") and len(node.arguments) == 1:
             bang_subs = self._collect_bang_subs(node.arguments[0])
             new_bang_subs = [
                 s for s in bang_subs
@@ -1341,7 +1377,13 @@ class JuliaASTVisitor:
                     agg_ranges.append(f"{iv} in 1:{self._jl_n(bare)}")
                 child = self._with_bang_subs(extra_subs)
                 arg_expr = child.visit(node.arguments[0])
-                for_clause_agg = ", ".join(agg_ranges)
+                # the last subscript varies fastest, as in numpy's (C)
+                # order: the elements are added in Python's order
+                for_clause_agg = ", ".join(reversed(agg_ranges))
+                if julia_func == "pysd_sum" and not self._summed_subs_last(node.arguments[0]):
+                    # numpy adds one element after the other when the summed
+                    # subscript is not the last one of the array
+                    return f"pysd_sum_seq({arg_expr} for {for_clause_agg})"
                 return f"{julia_func}({arg_expr} for {for_clause_agg})"
 
         args = [self.visit(a) for a in node.arguments]

@@ -499,15 +499,15 @@ class TestJuliaASTVisitor:
 
     @pytest.mark.parametrize("vensim_name,julia_name", [
         ("ABS", "abs"),
-        ("EXP", "exp"),
+        ("EXP", "pysd_exp"),         # the C maths library, as Python
         ("LN", "pysd_ln"),          # NaN out of the domain, as numpy
         ("SQRT", "pysd_sqrt"),
-        ("SIN", "sin"),
-        ("COS", "cos"),
-        ("TAN", "tan"),
+        ("SIN", "pysd_sin"),
+        ("COS", "pysd_cos"),
+        ("TAN", "pysd_tan"),
         ("ARCSIN", "pysd_asin"),
         ("ARCCOS", "pysd_acos"),
-        ("ARCTAN", "atan"),
+        ("ARCTAN", "pysd_atan"),
         ("MIN", "min"),
         ("MAX", "max"),
         ("INTEGER", "trunc"),
@@ -602,7 +602,7 @@ class TestJuliaASTVisitor:
             arguments=(1.0,),
         )
         result = v.visit(node)
-        assert result == "sinh(1.0)"
+        assert result == "pysd_sinh(1.0)"
 
     def test_cosh_maps_directly(self):
         v, *_ = _visitor_with_namespace()
@@ -611,7 +611,7 @@ class TestJuliaASTVisitor:
             arguments=(1.0,),
         )
         result = v.visit(node)
-        assert result == "cosh(1.0)"
+        assert result == "pysd_cosh(1.0)"
 
     def test_tanh_maps_directly(self):
         v, *_ = _visitor_with_namespace()
@@ -1458,7 +1458,7 @@ class TestJuliaASTVisitorExtended:
             ],
         )
         result = v.visit(node)
-        assert result == "sum(historic_labour_compensation(_ii0, t) for _ii0 in 1:N_SECTORS)"
+        assert result == "pysd_sum(historic_labour_compensation(_ii0, t) for _ii0 in 1:N_SECTORS)"
 
 
 # ===========================================================================
@@ -7395,7 +7395,7 @@ class TestAggregationOverEquationDims:
         v = self._visitor(["weight"], {"A": "_i0", "B": "_i1"},
                           {"weight": ["B"]}, {"A": 2, "B": 3})
         assert v.visit(self._sum(self._ref("weight", "B!"))) == \
-            "sum(weight[_ii0] for _ii0 in 1:N_B)"
+            "pysd_sum(weight[_ii0] for _ii0 in 1:N_B)"
 
     def test_plain_reference_inside_the_sum_keeps_the_equation_index(self):
         """Inside SUM(x[A, B!] * y[B]), y[B] is the equation's B, B! the summed one."""
@@ -7403,7 +7403,32 @@ class TestAggregationOverEquationDims:
                           {"x": ["A", "B"], "y": ["B"]}, {"A": 2, "B": 3})
         node = self._sum(ArithmeticStructure(
             operators=["*"], arguments=[self._ref("x", "A", "B!"), self._ref("y", "B")]))
-        assert v.visit(node) == "sum((x[_i0, _ii0] * y[_i1]) for _ii0 in 1:N_B)"
+        assert v.visit(node) == "pysd_sum_seq((x[_i0, _ii0] * y[_i1]) for _ii0 in 1:N_B)"
+
+    def test_sum_over_two_dimensions_in_numpy_order(self):
+        """SUM(x[A!, B!]) adds the elements as numpy (Python PySD): the last
+        subscript varies fastest, so B's loop comes first in the generator."""
+        v = self._visitor(["x"], {}, {"x": ["A", "B"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("x", "A!", "B!"))) == \
+            "pysd_sum(x[_ii0, _ii1] for _ii1 in 1:N_B, _ii0 in 1:N_A)"
+
+    def test_sum_over_a_first_subscript_adds_in_sequence(self):
+        """total[A] = SUM(x[B!, A]): B! is not the array's last dimension, so
+        numpy adds row after row (pysd_sum_seq); SUM(x[A, B!]) is pairwise."""
+        v = self._visitor(["x"], {"A": "_i0"}, {"x": ["B", "A"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("x", "B!", "A"))) == \
+            "pysd_sum_seq(x[_ii0, _i0] for _ii0 in 1:N_B)"
+        v = self._visitor(["x"], {"A": "_i0"}, {"x": ["A", "B"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("x", "A", "B!"))) == \
+            "pysd_sum(x[_i0, _ii0] for _ii0 in 1:N_B)"
+
+    def test_sum_order_follows_the_operands(self):
+        """y[B!] * x[A, B!] is an array (B!, A) in Python: added in sequence."""
+        v = self._visitor(["x", "y"], {"A": "_i0"}, {"x": ["A", "B"], "y": ["B"]},
+                          {"A": 2, "B": 3})
+        node = self._sum(ArithmeticStructure(
+            operators=["*"], arguments=[self._ref("y", "B!"), self._ref("x", "A", "B!")]))
+        assert v.visit(node).startswith("pysd_sum_seq(")
 
     def test_bang_function_call_over_the_equation_dimension(self):
         """A subscripted call f[B!](...) in an equation over B loops over all of B."""
@@ -7619,7 +7644,7 @@ class TestSumOverSubrange:
                                 subscripts=[tech, var], path=tmp_path / "m.mdl")
         model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
         content = JuliaModelBuilder(model).build_model().read_text()
-        assert "sum(gen[_ii0 + 2] for _ii0 in 1:N_VAR)" in content, content
+        assert "pysd_sum(gen[_ii0 + 2] for _ii0 in 1:N_VAR)" in content, content
 
 
 class TestPartsOverSubranges:
@@ -7832,7 +7857,7 @@ class TestModuleConstantsNotShadowed:
             warnings.simplefilter("ignore")
             content = translate_to_julia(tmp_path / "test_with_lookup.mdl").read_text()
         assert "var1 = pysd_input(_given, :var1, " in content
-        assert "var1 = pysd_safe(zeros(" not in content
+        assert "var1 = pysd_safe(fill(NaN" not in content
 
 
 class TestActiveInitialOde:
@@ -8464,8 +8489,8 @@ regional total=
 	~
 	~		|
 """)
-        assert "regional_total = sum(regional(_ii0, t) for _ii0 in 1:N_REGION)" in content
-        assert "regional = pysd_safe(zeros(" not in content
+        assert "regional_total = pysd_sum(regional(_ii0, t) for _ii0 in 1:N_REGION)" in content
+        assert "regional = pysd_safe(fill(NaN" not in content
 
 
 class TestOdeHelpers:
@@ -8800,6 +8825,25 @@ class TestTidy:
             "    end",
         ]
 
+    def test_generators_without_extra_parentheses(self, tmp_path, monkeypatch):
+        import shutil
+        if shutil.which("julia") is None:
+            pytest.skip("julia not found")
+        from pysd.builders.julia.julia_model_builder import tidy_julia_file
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        path = tmp_path / "m.jl"
+        path.write_text("\n".join([
+            "    a = pysd_sum((x[_ii0, _ii1] * 2.0) for _ii1 in 1:N_B, _ii0 in 1:N_A)",
+            "    b = f((y for y in 1:3), 2)",
+            "    c = g(x for x in y if x > 0)",
+        ]) + "\n")
+        assert tidy_julia_file(path)
+        assert path.read_text().split("\n")[:3] == [
+            "    a = pysd_sum(x[_ii0, _ii1] * 2.0 for _ii1 in 1:N_B, _ii0 in 1:N_A)",
+            "    b = f((y for y in 1:3), 2)",
+            "    c = g(x for x in y if x > 0)",          # filters: kept as they are
+        ]
+
     def test_off_without_julia_or_when_asked(self, tmp_path, monkeypatch):
         from pysd.builders.julia.julia_model_builder import tidy_julia_file
         path = tmp_path / "m.jl"
@@ -8937,7 +8981,7 @@ class TestEdgeCases:
     def test_loop_over_a_list_of_names(self):
         sb = _section_builder_from_elements([])
         block = sb._equations_block(["[x[_i0] ~ 1.0 for _i0 in [a, b]]..."])
-        assert "x = pysd_safe(zeros(2))" in block
+        assert "x = pysd_safe(fill(NaN, 2))" in block
 
     def test_initial_value_patterns_that_do_not_apply(self):
         pattern = JuliaSectionBuilder._u0_pattern

@@ -143,7 +143,7 @@ def _outer_for_clause(eq: str) -> str:
 
 
 #: PySD.jl version the generated models are written for (checked on load).
-PYSD_JL_VERSION = "0.2.6"
+PYSD_JL_VERSION = "0.2.7"
 
 # Control variable identifiers produced by Vensim
 _CONTROL_IDENTIFIERS = frozenset(
@@ -4726,15 +4726,12 @@ class JuliaSectionBuilder:
                             pass
                     alloc_needed[name] = cur
 
-        # Build alloc lines (shared by rhs! and observe)
+        # Build alloc lines (shared by rhs! and observe).  The elements the
+        # model does not define stay NaN, as in Python PySD.
         alloc_lines: List[str] = []
         for name, dims in sorted(alloc_needed.items()):
             dims = [d if d != "0" else "100" for d in dims]
-            if len(dims) == 1:
-                alloc_lines.append(f"    {name} = pysd_safe(zeros({dims[0]}))")
-            else:
-                dims_str = ", ".join(dims)
-                alloc_lines.append(f"    {name} = pysd_safe(zeros({dims_str}))")
+            alloc_lines.append(f"    {name} = pysd_safe(fill(NaN, {', '.join(dims)}))")
 
         sorted_alg = self._topo_sort_equations(alg_lines, stock_indices)
         return self._ode_model_block(

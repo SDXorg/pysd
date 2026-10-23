@@ -51,7 +51,7 @@ New Features
   values of the stocks) follows; ``sheets`` and ``files`` read the Excel
   inputs from other sheets or files.  Run with
   ``run_model(params = params(...))``.  Generated models require PySD.jl
-  0.2.6.
+  0.2.7.
 - Julia builder (ODE backend): when Julia is installed, the generated
   expressions have only the parentheses they need (printed again by Julia's
   own parser and printer, ``tidy.jl``; ``PYSD_JULIA_TIDY=0`` skips it).
@@ -82,6 +82,17 @@ Bug fixes
 - Julia builder: ``SUM`` (and ``PROD``, ``VMIN``, ``VMAX``) over a
   subscripted ``GET DATA`` or ``GET LOOKUPS`` variable reads the data
   (``x(i, t)``) instead of an array of zeros.
+- Julia builder: the results have Python PySD's last digits (PySD.jl
+  0.2.7).  ``SUM`` adds the elements in the order numpy does
+  (``pysd_sum``: pairwise, the last subscript varying fastest;
+  ``pysd_sum_seq`` where numpy adds one after the other), ``INVERT MATRIX``
+  uses the same LAPACK routine as ``numpy.linalg.inv``, and ``EXP``, ``LN``,
+  ``SIN``, ..., and ``^`` call the C maths library, as numpy (``pysd_exp``,
+  ``pysd_sin``...).  Before, values equal up to rounding (``x < 0`` with
+  ``x`` about ``1e-16``) could take the other branch of an ``IF THEN ELSE``
+  than in Python.  NaN elements count as 0 in ``SUM``, as in Python.
+- Julia builder (ODE backend): the elements a model does not define are
+  NaN, as in Python PySD; before, they were 0.
 - Julia builder: a lookup or data series of one point has the same value
   everywhere, as in Python PySD (PySD.jl 0.2.5); before, the model failed
   to load.

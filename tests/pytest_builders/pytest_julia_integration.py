@@ -606,8 +606,8 @@ class TestNewConstructsTranslation:
 
     # --- Built-in function expansions ---
 
-    def test_sum_builtin_resolves_to_julia_sum(self, tmp_path, julia_model):
-        """SUM(subscripted_var) must map to Julia's built-in sum()."""
+    def test_sum_builtin_resolves_to_pysd_sum(self, tmp_path, julia_model):
+        """SUM(subscripted_var) must map to PySD.jl's pysd_sum()."""
         # Build a minimal model with SUM inline
         mdl_src = julia_model("delay_fixed_constant")
         if not mdl_src.exists():

@@ -619,6 +619,17 @@ parse.  The Julia builder does not yet cover:
      - Full (holds last-true value)
      - Supported (instantaneous ifelse output; hold stock updated each step)
 
+With the same integration method (Euler with the model's time step), the
+results match Python PySD's to the last digits in most variables: ``SUM``
+adds the elements in numpy's order (``pysd_sum``: pairwise, the last
+subscript varying fastest, NaN counted as 0), ``INVERT MATRIX`` uses the
+same LAPACK routine as ``numpy.linalg.inv``, and the maths functions
+(``EXP``, ``LN``, ``SIN``, ..., ``^``) call the C maths library, as numpy
+does.  The elements a model does not define are NaN, as in Python.  This
+matters where a model compares two values that are equal up to rounding
+(``x < 0`` with ``x`` about ``1e-16``): both versions then take the same
+branch.
+
 
 Limitations
 -----------

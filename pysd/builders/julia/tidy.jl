@@ -43,6 +43,14 @@ const _PREC = Dict(:+ => 2, :- => 2, :* => 3, :/ => 3,
 _prec(x) = x isa Expr && x.head === :call && length(x.args) >= 2 && haskey(_PREC, x.args[1]) &&
            !(x.args[1] in (:+, :-) && length(x.args) == 2) ? _PREC[x.args[1]] : 100
 
+# a generator over ranges: body for i in 1:n, j in 1:m
+_is_generator(x) = x isa Expr && x.head === :generator &&
+    all(r -> r isa Expr && r.head === :(=) && r.args[1] isa Symbol, x.args[2:end])
+
+# generators with filters (if) or other forms: Julia prints them in its own way
+_other_generator(x) = x isa Expr &&
+    ((x.head === :generator && !_is_generator(x)) || any(_other_generator, x.args))
+
 function _print(x)
     x isa Expr || return string(x)
     if x.head === :call && haskey(_PREC, x.args[1])
@@ -64,8 +72,16 @@ function _print(x)
             push!(parts, needs ? "($text)" : text)
         end
         return join(parts, " $op ")
+    elseif x.head === :call && x.args[1] === :(:) && length(x.args) == 3   # 1:n
+        return string(_print(x.args[2]), ":", _print(x.args[3]))
     elseif x.head === :call
-        return string(_print(x.args[1]), "(", join(map(_print, x.args[2:end]), ", "), ")")
+        args = x.args[2:end]
+        # f(y for y in ys) needs no parentheses around a lone generator
+        text(a) = _is_generator(a) && length(args) > 1 ? "($(_print(a)))" : _print(a)
+        return string(_print(x.args[1]), "(", join(map(text, args), ", "), ")")
+    elseif _is_generator(x)
+        loops = (string(_print(r.args[1]), " in ", _print(r.args[2])) for r in x.args[2:end])
+        return string(_print(x.args[1]), " for ", join(loops, ", "))
     elseif x.head === :ref
         return string(_print(x.args[1]), "[", join(map(_print, x.args[2:end]), ", "), "]")
     elseif x.head in (:(=), :(.=))
@@ -79,7 +95,7 @@ end
 function _reprint(code::AbstractString)
     occursin(r"->|@|\$|\bdo\b|\bbegin\b|\bfunction\b|\bend\b", code) && return nothing
     ex = _statement(code)
-    ex === nothing && return nothing
+    (ex === nothing || _other_generator(ex)) && return nothing
     flat = _flatten(ex)
     # the printed statement must read back as the same expression
     for text in (_print(flat), string(flat))
