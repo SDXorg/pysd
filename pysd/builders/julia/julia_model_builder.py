@@ -4910,13 +4910,13 @@ class JuliaSectionBuilder:
                      if re.match(r"\s*(\w+)", ln).group(1) in dynamic]
         computed, dyn_names = [], []
         for lhs, _, _, _, _ in eqs:
-            if not lhs:
+            if not lhs:  # pragma: no cover  # every equation the builder writes names its variable
                 continue
             target = dyn_names if lhs in dynamic else computed
             if lhs not in target and lhs not in stock_indices:
                 target.append(lhs)
         for name in alloc_needed:
-            if name in stock_indices:
+            if name in stock_indices:  # pragma: no cover  # the allocation scan leaves stocks out
                 continue
             target = dyn_names if name in dynamic else computed
             if name not in target:
@@ -5440,13 +5440,6 @@ class JuliaSectionBuilder:
             for items in groups.values()
             for _, entry in sorted(items, key=lambda item: item[0])
         ]
-
-    def _u0_value(self, entry: str) -> str:
-        """The value of a u0 entry inside ``Float64[...]``: repeated for
-        entries over several cells."""
-        rhs = entry.split("=>", 1)[1].strip()
-        size = self._u0_size(entry)
-        return rhs if size == 1 else f"fill({rhs}, {size})..."
 
     def _u0_assignments(self, u0_entries: List[str], target: str) -> List[str]:
         """``target.stock = value`` for every stock: the model's stocks, then

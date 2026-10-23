@@ -4440,6 +4440,20 @@ class TestMacroExpansion:
         assert elements["out_my_macro_my_macro"] == ArithmeticStructure(
             operators=["*"], arguments=(ReferenceStructure("rate"), 2))
 
+    def test_subscripted_parameter_takes_the_subscripts(self, tmp_path):
+        """A parameter used as input[dim] in the macro, called with a plain
+        name: the name with the macro's subscripts."""
+        body = ArithmeticStructure(operators=["*"], arguments=(
+            ReferenceStructure("input", SubscriptsReferenceStructure(("dim",))), 2))
+        macro = self._macro("sub_macro", ["input"], [_make_element("SUB MACRO", body)])
+        model = self._model(tmp_path, [
+            _make_element("Out", self._call("sub_macro", ReferenceStructure("rate")))],
+            [macro])
+        new = inline_macros(model)
+        elements = {e.name: e.components[0].ast for e in new.sections[0].elements}
+        assert elements["out_sub_macro_sub_macro"].arguments[0] == ReferenceStructure(
+            "rate", SubscriptsReferenceStructure(("dim",)))
+
     def test_model_without_macros_is_unchanged(self, tmp_path):
         model = self._model(tmp_path, [_make_element("Rate", 3.0)], [])
         assert inline_macros(model) is model
@@ -8793,3 +8807,219 @@ class TestTidy:
         with pytest.warns(UserWarning, match="julia not found"):
             assert not tidy_julia_file(path)
         assert path.read_text() == "x = ((a * b) * c)\n"
+
+
+# ===========================================================================
+# Edge cases of the ODE layout and the helpers of this branch
+# ===========================================================================
+
+class TestEdgeCases:
+    """The less common paths: errors, unusual layouts and fallbacks."""
+
+    @staticmethod
+    def _sb_with_ranges():
+        from types import SimpleNamespace
+        sb = _section_builder_from_elements([])
+        sb._subs_elems = {"dim": ["a", "b", "c"], "sub": ["b", "c"], "other": ["x", "y"]}
+        sb._elem_to_range = {"a": "dim", "b": "dim", "c": "dim", "x": "other", "y": "other"}
+        part = lambda *subs: SimpleNamespace(subscripts=(list(subs), []))
+        return sb, part
+
+    # ---- expressions -------------------------------------------------------
+
+    def test_power_of_a_negative_number_in_a_chain(self):
+        v, *_ = _visitor_with_namespace(["a"])
+        node = ArithmeticStructure(operators=["^", "+"], arguments=(-2, 2, 1))
+        assert v.visit(node) == "((-pysd_power(2.0, 2.0)) + 1.0)"
+        node = ArithmeticStructure(operators=["^", "*"], arguments=(ReferenceStructure("a"), 2, 3))
+        assert v.visit(node) == "(pysd_power(a, 2.0) * 3.0)"
+
+    def test_range_name_through_an_alias(self):
+        v, *_ = _visitor_with_namespace([])
+        v.subs_elems = {"dim": ["a", "b"], "dim1": ["a", "b"]}
+        v.active_subs = {"dim": "_i0"}
+        v._clean_active_subs = {"dim": "_i0"}
+        v.sub_aliases = {"dim1": "dim"}
+        assert v.visit(ReferenceStructure("dim1")) == "_i0"
+
+    def test_position_of_a_subrange_element_in_its_main_range(self):
+        v, *_ = _visitor_with_namespace([])
+        v.subs_elems = {"dim": ["a", "b", "c"], "sub": ["b", "c"]}
+        v._elem_index = {"a": {"dim": 1}, "b": {"dim": 2, "sub": 1}, "c": {"dim": 3, "sub": 2}}
+        assert v._main_position("sub", "1") == "2"       # b, second in dim
+        assert v._main_position("sub", "9") == "9"       # out of the range: as it is
+
+    # ---- builder helpers -----------------------------------------------------
+
+    def test_outer_for_clause_without_a_loop(self):
+        from pysd.builders.julia.julia_model_builder import _outer_for_clause
+        assert _outer_for_clause("[x[1] ~ 2.0]") == ""
+
+    def test_values_at_the_initial_time_that_cannot_be_computed(self):
+        sb = _section_builder_from_elements([])
+        unknown = CallStructure(ReferenceStructure("exp"), (ReferenceStructure("nothing here"),))
+        assert sb._eval_ast_at_t0(unknown) is None
+        negative = CallStructure(ReferenceStructure("ln"), (-1.0,))
+        assert sb._eval_ast_at_t0(negative) is None
+
+    def test_data_parts_need_one_range(self):
+        sb, part = self._sb_with_ranges()
+        # elements of the variable's range, in any order: by position
+        sb._var_dims["x"] = ["dim"]
+        assert sb._place_data_parts_1d("x", [part("c"), part("a")], ["fc", "fa"]) == \
+            ["fa", "[_ -> NaN]", "fc"]
+        # elements of two ranges: not one range
+        assert sb._place_data_parts_1d("z", [part("a"), part("x")], ["fa", "fx"]) is None
+
+    def test_keyed_dispatch_shapes(self):
+        sb, part = self._sb_with_ranges()
+        # one element of dim fixed, a range of other: keyed by the dim element
+        assert sb._keyed_dispatch("v", [part("a", "other"), part("b", "other")]) == \
+            ([(1,), (2,)], 2, 1)
+        # an element that is not of the variable's range
+        sb._var_dims["w"] = ["dim", "other"]
+        assert sb._keyed_dispatch("w", [part("a", "other"), part("x", "other")]) is None
+        # the same element twice
+        assert sb._keyed_dispatch("v", [part("a", "other"), part("a", "other")]) is None
+
+    def test_constants_in_parts_need_two_parts(self):
+        elem = _make_element("one part", 1.0)
+        sb = _section_builder_from_elements([])
+        assert sb._placed_constants_1d(elem) is None
+
+    def test_literal_arrays_that_do_not_cover_the_variable(self):
+        sb = _section_builder_from_elements([])
+        sb.subs_const_decls = ["const N_DIM = 3"]
+        eqs = [("x", set(), "", ["x[1] = 1.0"], None), ("x", set(), "", ["x[2] = 2.0"], None),
+               ("y", set(), "", ["y[1] = 1.0"], None), ("y", set(), "", ["y[4] = 2.0"], None)]
+        # x covers 2 of 3 elements; y has an element out of its size
+        assert sb._literal_arrays(eqs, set(), {"x": ["N_DIM"], "y": ["2"]}) == {}
+
+    def test_array_constant_from_a_list(self):
+        sb = _section_builder_from_elements([])
+        assert sb._ode_array_constant("x[1:N_A]", "[1.0, 2.0]") == "const x = Float64[1.0, 2.0]"
+
+    def test_topological_order_keeps_the_parts_of_a_variable(self):
+        sb = _section_builder_from_elements([])
+        eqs = ["x[1] ~ x[2] + 1.0", "x[2] ~ 5.0", "y ~ x[1]"]
+        order = sb._topo_sort_equations(eqs, {})
+        assert order.index("x[1] ~ x[2] + 1.0") < order.index("x[2] ~ 5.0") < order.index("y ~ x[1]")
+
+    # ---- initial values --------------------------------------------------
+
+    def test_initial_values_of_a_flat_stock_with_two_indices(self):
+        sb = _section_builder_from_elements([])
+        sb._ode_stock_ndims = {"x": 1, "y": 1, "z": 2}
+        cells = [(["1", "1"], "a[1, 1]"), (["2", "1"], "a[2, 1]"),
+                 (["1", "2"], "a[1, 2]"), (["2", "2"], "a[2, 2]")]
+        # a 2-D formula for a stock laid out flat: vec of the comprehension
+        assert sb._u0_stock_lines("s", "x", cells) == \
+            ["s.x .= vec([a[i, j] for i in 1:2, j in 1:2])"]
+        # cells that follow no formula, some over several cells: by position
+        cells = [(["1:3"], "u"), (["4"], "v"), (["5"], "w")]
+        assert sb._u0_stock_lines("s", "y", cells) == \
+            ["s.y[1:3] .= u", "s.y[4] = v", "s.y[5] = w"]
+        cells = [(["1:3", "1"], "u"), (["1:3", "2"], "q[7]")]
+        assert sb._u0_stock_lines("s", "z", cells) == \
+            ["s.z[1:3, 1] .= u", "s.z[1:3, 2] .= q[7]"]
+
+    def test_initial_values_over_several_cells_of_a_flat_stock(self):
+        sb = _section_builder_from_elements([])
+        sb._ode_stock_ndims = {"x": 1}
+        # two indices on a stock laid out flat, cells that follow no formula
+        cells = [(["1:2", "1"], "u"), (["1:2", "2"], "v[9]")]
+        assert sb._u0_stock_lines("s", "x", cells) == ["s.x[1:2] .= u", "s.x[3:4] .= v[9]"]
+
+    def test_loop_over_a_list_of_names(self):
+        sb = _section_builder_from_elements([])
+        block = sb._equations_block(["[x[_i0] ~ 1.0 for _i0 in [a, b]]..."])
+        assert "x = pysd_safe(zeros(2))" in block
+
+    def test_initial_value_patterns_that_do_not_apply(self):
+        pattern = JuliaSectionBuilder._u0_pattern
+        assert pattern([(["1:3"], "u"), (["4"], "v")]) is None      # a range and an element
+        assert pattern([(["a"], "u"), (["b"], "v")]) is None        # not integer indices
+        # the integer changes, but not as an index
+        assert pattern([(["1"], "f(7)"), (["2"], "f(9)")]) is None
+
+    def test_mtk_pipeline_initial_value_with_a_constant(self):
+        """MTK: all stages of a pipeline cell start at its initial value,
+        with the parameters written as their values."""
+        sb = _section_builder_from_elements([], backend="mtk")
+        sb.param_decls = ["@parameters start = 4.0"]
+        sb.u0_entries = ["_df_pipe_x[1:2, 1] => start * 2", "level => 1.0"]
+        assert sb._u0_block_mtk() == (
+            "u0 = [\n    _df_pipe_x[1, 1] => 4.0 * 2,\n    _df_pipe_x[2, 1] => 4.0 * 2,\n"
+            "    level => 1.0,\n]\n")
+
+    def test_tidy_that_fails(self, tmp_path, monkeypatch):
+        import subprocess
+        from pysd.builders.julia import julia_model_builder as jmb
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        monkeypatch.setattr(jmb, "warn", jmb.warn)
+        monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/julia")
+
+        def fail(*args, **kwargs):
+            raise subprocess.CalledProcessError(1, args[0])
+        monkeypatch.setattr(subprocess, "run", fail)
+        path = tmp_path / "m.jl"
+        path.write_text("x = ((a * b) * c)\n")
+        with pytest.warns(UserWarning, match="keeps its extra parentheses"):
+            assert not jmb.tidy_julia_file(path)
+        assert path.read_text() == "x = ((a * b) * c)\n"
+
+    def test_allocate_available_profiles(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+branch:
+	b1, b2
+	~
+	~		|
+
+ptype:
+	pprofile, ppriority, pwidth, pextra
+	~
+	~		|
+
+request[branch]=
+	3, 4
+	~
+	~		|
+
+pp[branch, ptype]=
+	1, 1, 1, 0; 1, 2, 1, 0;
+	~
+	~		|
+
+flat profile=
+	1
+	~
+	~		|
+
+avail=
+	5
+	~
+	~		|
+
+by profile[branch]=
+	ALLOCATE AVAILABLE(request[branch], pp[branch, pprofile], avail)
+	~
+	~		|
+
+whole range[branch]=
+	ALLOCATE AVAILABLE(request[branch], pp[branch, ptype], avail)
+	~
+	~		|
+
+one profile[branch]=
+	ALLOCATE AVAILABLE(request[branch] * 1, flat profile, avail)
+	~
+	~		|
+""")
+        params = _block(content, "function params(")    # constant inputs: in params
+        # the profile's dimension is the range of its first element
+        assert "for _v in 1:N_BRANCH, _p in 1:4]" in params
+        # or the range itself
+        assert params.count("for _v in 1:N_BRANCH, _p in 1:4]") == 2
+        # a profile without subscripts, a request that is an expression
+        assert ("pysd_allocate_available([(request[_v] * 1.0) for _v in 1:N_BRANCH], "
+                "flat_profile, avail)") in params
