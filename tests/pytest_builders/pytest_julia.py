@@ -735,6 +735,16 @@ class TestJuliaASTVisitor:
         result = v.visit(node)
         assert "input" in result
 
+    def test_call_to_a_macro_without_warning(self):
+        """A call to a Vensim macro is written with the macro's Julia name."""
+        import warnings
+        v = JuliaASTVisitor(JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+                            macro_names={"my_macro"})
+        node = CallStructure(function=ReferenceStructure("My Macro"), arguments=(1.0, 2.0))
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            assert v.visit(node) == "my_macro(1.0, 2.0)"
+
     def test_with_extra_subs_propagates_macro_names(self):
         ns = JuliaNamespaceManager()
         ns.add_to_namespace("my_macro")
@@ -1726,6 +1736,27 @@ class TestJuliaSectionBuilderExpansions:
         assert "eps(Float64)" in fallback_eq, (
             f"Fallback must clamp with eps(Float64), but got: {fallback_eq!r}"
         )
+
+    def test_delay_fixed_dynamic_fallback_subscripted(self):
+        """A subscripted DELAY FIXED with a delay time known only at run time:
+        one first-order ODE per element, with its initial value."""
+        import warnings
+        sr = _make_subscript_range("sector", ["A", "B"])
+        delay_ast = DelayFixedStructure(
+            input=ReferenceStructure("input_var"),
+            delay_time=ReferenceStructure("delay_var"),
+            initial=5.0,
+        )
+        comp = AbstractComponent(subscripts=[["sector"], []], ast=delay_ast)
+        elem = AbstractElement(name="Out", components=[comp])
+        sb = _section_builder_from_elements([elem], subscripts=[sr])
+        with pytest.warns(UserWarning, match="falling back to first-order ODE"):
+            sb.build_section()
+        all_eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
+        assert any(e.startswith("[D(_df_out[_i0]) ~ (") and "eps(Float64)" in e
+                   and "for _i0 in 1:N_SECTOR" in e for e in all_eqs), all_eqs
+        assert any(e.startswith("[out[_i0] ~ _df_out[_i0]") for e in all_eqs), all_eqs
+        assert "_df_out[1] => 5.0" in sb.u0_entries and "_df_out[2] => 5.0" in sb.u0_entries
 
     def test_delay_n_variable_order_uses_initial_value(self):
         """DELAY N whose order is a time-varying expression (e.g. 2 + STEP(1, 10))

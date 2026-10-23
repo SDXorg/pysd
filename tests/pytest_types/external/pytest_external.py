@@ -99,6 +99,18 @@ class TestExcels():
         assert len(p.open_files()) == n_files
 
 
+    def test_excel_engine(self, monkeypatch):
+        """openpyxl for .xlsx and .xlsm; calamine for .xls when installed,
+        pandas' own choice otherwise and for other files."""
+        from pysd.py_backend.external import _excel_engine
+
+        assert _excel_engine(".xlsx") == "openpyxl"
+        assert _excel_engine(".xlsm") == "openpyxl"
+        assert _excel_engine(".ods") is None
+        monkeypatch.setitem(sys.modules, "python_calamine", None)
+        assert _excel_engine(".xls") is None
+
+
 class TestExternalMethods():
     """
     Test for simple methods of External
