@@ -5790,8 +5790,14 @@ class JuliaSectionBuilder:
         for name in stock_order:
             size = stock_sizes[name]
             dim_names = self._var_dims.get(name, [])
-            dims_jl = ", ".join(f'"{d}"' for d in dim_names)
-            lines.append(f'    ("{name}", {idx}, String[{dims_jl}]),')
+            # The model's own stocks, by their subscript ranges.  Internal
+            # stocks (_df_pipe_*, _sit_*, ...: the stages of a DELAY FIXED,
+            # the value a SAMPLE IF TRUE holds) are not results, as in
+            # Python PySD, and their cells are not laid out over ranges.
+            if not name.startswith("_") and size == math.prod(
+                    self._subs_sizes.get(d, 0) for d in dim_names):
+                dims_jl = ", ".join(f'"{d}"' for d in dim_names)
+                lines.append(f'    ("{name}", {idx}, String[{dims_jl}]),')
             idx += size
         lines.append("]")
         return "\n".join(lines) + "\n"

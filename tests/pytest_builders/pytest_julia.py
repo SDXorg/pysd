@@ -8621,3 +8621,32 @@ numbers[c]= INTEG (1, 5)
         assert compact(cells) is None
         cells = [(["1"], "f(1) + 1", ""), (["2"], "f(2) + 1", ""), (["3"], "f(3) + 1", "")]
         assert compact(cells) == "[f(_i0) + 1 for _i0 in 1:3]..."
+
+
+class TestStateMapHasTheModelsStocks:
+    """The results file holds the model's own stocks, not the internal ones
+    (the stages of a DELAY FIXED), which are not laid out over ranges."""
+
+    def test_internal_stocks_are_not_in_the_state_map(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+dim:
+	a, b
+	~
+	~		|
+
+level[dim]= INTEG (
+	1,
+		0)
+	~
+	~		|
+
+delayed[dim]=
+	DELAY FIXED(level[dim], 2, 0)
+	~
+	~		|
+""")
+        state_map = _block(content, "const _state_map = [", "\n]\n")
+        assert '("level", 1, String["dim"]),' in state_map
+        assert "_df_pipe" not in state_map
+        # the internal stock is still in the state, after level
+        assert "_df_pipe_delayed = zeros(4, N_DIM)" in content

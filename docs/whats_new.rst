@@ -75,6 +75,9 @@ Bug fixes
 - Julia builder: a lookup or data series of one point has the same value
   everywhere, as in Python PySD (PySD.jl 0.2.5); before, the model failed
   to load.
+- Julia builder (ODE backend): the results file (``save_results``) holds
+  the model's stocks only; the internal stocks of ``DELAY FIXED``,
+  ``SAMPLE IF TRUE`` and others were saved as their first cell.
 - Julia builder: fix multi-dimensional (2D/3D) subscripted variables, which ran
   with wrong values or failed to run. Multi-dimensional stocks are now laid out
   in Julia's column-major order, elements defined one subscript element at a time
