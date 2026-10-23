@@ -52,6 +52,9 @@ New Features
   inputs from other sheets or files.  Run with
   ``run_model(params = params(...))``.  Generated models require PySD.jl
   0.2.5.
+- Julia builder (ODE backend): when Julia is installed, the generated
+  expressions have only the parentheses they need (printed again by Julia's
+  own parser and printer, ``tidy.jl``; ``PYSD_JULIA_TIDY=0`` skips it).
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

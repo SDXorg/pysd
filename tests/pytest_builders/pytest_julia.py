@@ -80,6 +80,13 @@ from pysd.translators.structures.abstract_model import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
+@pytest.fixture(autouse=True)
+def _no_tidy(monkeypatch):
+    """These tests read the generated text as the builder writes it: without
+    the parentheses pass (tidy.jl, tested in TestTidy)."""
+    monkeypatch.setenv("PYSD_JULIA_TIDY", "0")
+
 def _make_section(
     elements=None,
     subscripts=(),
@@ -8737,3 +8744,52 @@ level= INTEG (
         assert "for _ in 1:3\n" in init          # 2 stocks (level, the delay) + 1
         assert "isequal(next, s) && return getdata(next)" in init
         assert 'error("the initial values do not settle: they depend on each other in a cycle")' in init
+
+
+class TestTidy:
+    """tidy.jl writes the expressions with only the parentheses they need,
+    the same expressions (Julia's own parser and printer)."""
+
+    def test_extra_parentheses_are_removed(self, tmp_path, monkeypatch):
+        import shutil
+        if shutil.which("julia") is None:
+            pytest.skip("julia not found")
+        from pysd.builders.julia.julia_model_builder import tidy_julia_file
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        path = tmp_path / "m.jl"
+        path.write_text("\n".join([
+            "function model!(d, s, p, t)",
+            "    x = ((a * b) * c)  # units: t",
+            "    y = pysd_ifelse((t < 2015.0), ((a + b) + c), (a - (b - c)))",
+            "    z = ((a / b) * c)",
+            "    f = pysd_input(_given, :f, (x) -> f_itp(x))",
+            '    w = get(_obs_init, "w#1", 0.0)',
+            "    for _i0 in 1:N_A",
+            "        v[_i0] = ((a[_i0] + 1.0) * 2.0)",
+            "    end",
+            "end",
+        ]) + "\n")
+        assert tidy_julia_file(path)
+        assert path.read_text().split("\n")[:9] == [
+            "function model!(d, s, p, t)",
+            "    x = a * b * c  # units: t",
+            "    y = pysd_ifelse(t < 2015.0, a + b + c, a - (b - c))",
+            "    z = (a / b) * c",
+            "    f = pysd_input(_given, :f, (x) -> f_itp(x))",     # kept as it is
+            '    w = get(_obs_init, "w#1", 0.0)',
+            "    for _i0 in 1:N_A",
+            "        v[_i0] = (a[_i0] + 1.0) * 2.0",
+            "    end",
+        ]
+
+    def test_off_without_julia_or_when_asked(self, tmp_path, monkeypatch):
+        from pysd.builders.julia.julia_model_builder import tidy_julia_file
+        path = tmp_path / "m.jl"
+        path.write_text("x = ((a * b) * c)\n")
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "0")
+        assert not tidy_julia_file(path)
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        monkeypatch.setenv("PATH", "")
+        with pytest.warns(UserWarning, match="julia not found"):
+            assert not tidy_julia_file(path)
+        assert path.read_text() == "x = ((a * b) * c)\n"

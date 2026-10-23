@@ -32,6 +32,13 @@ SAMPLES_DIR = Path("tests/test-models/samples")
 # Helpers
 # ---------------------------------------------------------------------------
 
+
+@pytest.fixture(autouse=True)
+def _no_tidy(monkeypatch):
+    """These tests read the generated text as the builder writes it: without
+    the parentheses pass (tidy.jl, tested in TestTidy)."""
+    monkeypatch.setenv("PYSD_JULIA_TIDY", "0")
+
 def _all_mdl_files() -> List[Tuple[str, Path]]:
     """Return (folder_name, model_path) for every model in tests/test-models/tests/.
 

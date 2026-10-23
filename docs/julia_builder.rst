@@ -150,6 +150,13 @@ The ``run_model`` function accepts keyword arguments:
 Structure of the generated model (ODE backend)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+When Julia is installed, the expressions are written with only the
+parentheses they need (``a * b * c`` rather than ``((a * b) * c)``): the
+builder prints each statement again with Julia's own parser and printer
+(``pysd/builders/julia/tidy.jl``), so the expressions are the same.  Without
+Julia the file keeps the extra parentheses, with a warning; set
+``PYSD_JULIA_TIDY=0`` to skip this step.
+
 The generated file has these parts, in this order:
 
 ``params(; sheets, files, values...)``

@@ -270,7 +270,34 @@ class JuliaModelBuilder:
         """Translate the model and return the path to the main ``.jl`` file."""
         main = self.sections[0]
         main.build_section()
+        if main.backend == "ode" and not (main.split and main.views_dict):
+            tidy_julia_file(main.path)
         return main.path
+
+
+def tidy_julia_file(path: Path) -> bool:
+    """Write the expressions of a generated file with only the parentheses
+    they need, with Julia's own printer (``tidy.jl``): the expressions are
+    the same.  Needs ``julia`` on the PATH; without it the file is left as it
+    is, with a warning.  ``PYSD_JULIA_TIDY=0`` turns it off."""
+    import os
+    import shutil
+    import subprocess
+    if os.environ.get("PYSD_JULIA_TIDY", "1") == "0":
+        return False
+    julia = shutil.which("julia")
+    if julia is None:
+        warn("julia not found: the generated model keeps its extra parentheses "
+             "(install Julia to have them removed)")
+        return False
+    script = Path(__file__).with_name("tidy.jl")
+    try:
+        subprocess.run([julia, "--startup-file=no", str(script), str(path)],
+                       check=True, capture_output=True, text=True, timeout=600)
+    except (subprocess.SubprocessError, OSError) as exc:
+        warn(f"the generated model keeps its extra parentheses: {exc}")
+        return False
+    return True
 
 
 # ---------------------------------------------------------------------------
