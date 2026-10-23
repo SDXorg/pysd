@@ -500,13 +500,13 @@ class TestJuliaASTVisitor:
     @pytest.mark.parametrize("vensim_name,julia_name", [
         ("ABS", "abs"),
         ("EXP", "exp"),
-        ("LN", "log"),
-        ("SQRT", "sqrt"),
+        ("LN", "pysd_ln"),          # NaN out of the domain, as numpy
+        ("SQRT", "pysd_sqrt"),
         ("SIN", "sin"),
         ("COS", "cos"),
         ("TAN", "tan"),
-        ("ARCSIN", "asin"),
-        ("ARCCOS", "acos"),
+        ("ARCSIN", "pysd_asin"),
+        ("ARCCOS", "pysd_acos"),
         ("ARCTAN", "atan"),
         ("MIN", "min"),
         ("MAX", "max"),
@@ -9023,3 +9023,53 @@ one profile[branch]=
         # a profile without subscripts, a request that is an expression
         assert ("pysd_allocate_available([(request[_v] * 1.0) for _v in 1:N_BRANCH], "
                 "flat_profile, avail)") in params
+
+
+class TestMappedSubrangeOfALargerRange:
+    """x[sectors, sectors1] = m[sec_map_1, secb_map_0], where sec_map_0 is
+    (sec3-sec4) -> sectors, a subrange of m's own range: the block of m at
+    the subranges' positions."""
+
+    def test_block_of_a_larger_matrix(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+sectors:
+	s1, s2
+	~
+	~		|
+
+sectors1:
+	t1, t2
+	~
+	~		|
+
+all sec:
+	sec1, sec2, sec3, sec4
+	~
+	~		|
+
+all secb:
+	secb1, secb2, secb3, secb4
+	~
+	~		|
+
+sec_map_1:
+	(sec1-sec2) -> sectors
+	~
+	~		|
+
+secb_map_0:
+	(secb3-secb4) -> sectors1
+	~
+	~		|
+
+m[all sec, all secb]=
+	1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12; 13, 14, 15, 16;
+	~
+	~		|
+
+block[sectors, sectors1]=
+	m[sec_map_1, secb_map_0] * 1
+	~
+	~		|
+""")
+        assert "m[_i0, _i1 + 2]" in content, content

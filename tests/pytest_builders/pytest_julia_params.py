@@ -122,6 +122,16 @@ delayed births=
 	~
 	~		|
 
+safe log=
+	IF THEN ELSE(growth rate < 1, 0, LN(growth rate - 1))
+	~
+	~	LN of a negative number in the branch that is not taken.	|
+
+safe root=
+	IF THEN ELSE(growth rate < 1, 1, SQRT(growth rate - 1))
+	~
+	~		|
+
 FINAL TIME  = 10
 	~	Month
 	~		|
@@ -151,6 +161,9 @@ COLUMNS = {
     "initial births": ("initial_births", None),
     "initial growth": ("initial_growth", None),
     "delayed births": ("delayed_births", None),
+    # LN and SQRT out of their domain give NaN, as numpy (not an error)
+    "safe log": ("safe_log", None),
+    "safe root": ("safe_root", None),
 }
 
 REGIONS = {"region": ["north", "south", "east"]}

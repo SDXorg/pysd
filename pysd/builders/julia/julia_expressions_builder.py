@@ -69,13 +69,13 @@ BUILTIN_FUNCTIONS: dict = {
     # Basic math
     "ABS": "abs",
     "EXP": "exp",
-    "LN": "log",
-    "SQRT": "sqrt",
+    "LN": "pysd_ln",
+    "SQRT": "pysd_sqrt",
     "SIN": "sin",
     "COS": "cos",
     "TAN": "tan",
-    "ARCSIN": "asin",
-    "ARCCOS": "acos",
+    "ARCSIN": "pysd_asin",
+    "ARCCOS": "pysd_acos",
     "ARCTAN": "atan",
     "SINH": "sinh",
     "COSH": "cosh",
@@ -860,7 +860,11 @@ class JuliaASTVisitor:
                                     aligned = lv
                                     break
                         if aligned:
-                            indices.append(aligned)
+                            # a subrange of the variable's own range mapped to
+                            # the active one (sec_map_0: (sec15-sec28) ->
+                            # sectors): its elements at their positions there
+                            indices.append(self._index_in_var_dim(
+                                aligned, sub, var_dims_list, pos))
                             used_align_vars.add(aligned)
                         # else: genuinely unresolvable — skip (rare)
                 else:

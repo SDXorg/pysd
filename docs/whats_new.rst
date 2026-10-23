@@ -51,7 +51,7 @@ New Features
   values of the stocks) follows; ``sheets`` and ``files`` read the Excel
   inputs from other sheets or files.  Run with
   ``run_model(params = params(...))``.  Generated models require PySD.jl
-  0.2.5.
+  0.2.6.
 - Julia builder (ODE backend): when Julia is installed, the generated
   expressions have only the parentheses they need (printed again by Julia's
   own parser and printer, ``tidy.jl``; ``PYSD_JULIA_TIDY=0`` skips it).
@@ -82,6 +82,17 @@ Bug fixes
 - Julia builder: a lookup or data series of one point has the same value
   everywhere, as in Python PySD (PySD.jl 0.2.5); before, the model failed
   to load.
+- Julia builder: ``LN``, ``SQRT``, ``ARCSIN``, ``ARCCOS`` and ``LOG`` give
+  NaN out of their domain, as in Python PySD (PySD.jl 0.2.6); before, a
+  branch of ``IF THEN ELSE`` that is not taken could stop the run with a
+  ``DomainError``.
+- Julia builder: a subrange of a variable's own range mapped to another
+  range (``sec_map_0: (sec15-sec28) -> sectors``, read as
+  ``m[sec_map_1, secb_map_0]``) reads the subrange's elements at their
+  positions; before, the first elements of the range were read.
+- Julia builder: a named range local to several sheets of a workbook (a
+  scenario sheet and its older copy) is read from the requested sheet
+  (PySD.jl 0.2.6).
 - Julia builder (ODE backend): the results file (``save_results``) holds
   the model's stocks only; the internal stocks of ``DELAY FIXED``,
   ``SAMPLE IF TRUE`` and others were saved as their first cell.
