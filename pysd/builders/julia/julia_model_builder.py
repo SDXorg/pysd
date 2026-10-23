@@ -4962,9 +4962,9 @@ class JuliaSectionBuilder:
             if lines[-1] != "":
                 lines.append("")
             lines.append("    # Computed from the constants")
-            lines += const_alloc + body
+            lines += const_alloc + _fold_number_cells(body)
         lines.append("")
-        lines.append("    p = (; " + ", ".join(p_names) + ")")
+        lines += _wrap_list("    p = (; ", p_names, ")")
         lines.append("    pysd_check_inputs(_given, p)")
         fixed = {k: v for k, v in self._fixed_inputs.items() if k in p_names}
         if fixed:
@@ -4989,7 +4989,7 @@ class JuliaSectionBuilder:
                 axes.append(f"{name} = zeros({size})")
                 self._ode_stock_ndims[name] = 1
         lines.append("# Stocks by name and shape; the solver sees one flat vector")
-        lines.append("const _state_axes = getaxes(ComponentArray(; " + ", ".join(axes) + "))")
+        lines += _wrap_list("const _state_axes = getaxes(ComponentArray(; ", axes, "))")
         lines.append("_named(u) = u isa ComponentArray ? u : ComponentArray(u, _state_axes)")
         lines.append("")
 
@@ -4997,19 +4997,21 @@ class JuliaSectionBuilder:
         lines.append("# the variables that change during the run, at the state s and time t")
         lines.append("function model!(d, s, p, t)")
         if p_names:
-            lines.append("    (; " + ", ".join(p_names) + ") = p")
+            lines += _wrap_list("    (; ", p_names, ") = p")
         for name in stock_indices:
             lines.append(f"    {name} = s.{name}")
         lines.append("")
         lines += dyn_alloc
         commented = set()
+        dyn_lines: List[str] = []
         for lhs, _, _, converted, comment in eqs:
             if lhs not in dynamic:
                 continue
             if comment and lhs not in commented:
                 commented.add(lhs)
-                lines.append(f"    # {comment}")
-            lines.extend(f"    {ln}" for ln in converted)
+                dyn_lines.append(f"    # {comment}")
+            dyn_lines.extend(f"    {ln}" for ln in converted)
+        lines += _fold_number_cells(dyn_lines)
         if ode_lines:
             lines.append("")
             lines.append("    # Rates of change")
@@ -5038,7 +5040,7 @@ class JuliaSectionBuilder:
                 expr = self.control_vals.get(name) or default
                 lines.append(f"    _ctrl_{name} = {ctrl(expr)}")
                 returned.append(f"{name} = _ctrl_{name}")
-        lines.append("    return (; " + ", ".join(returned) + ")")
+        lines += _wrap_list("    return (; ", returned, ")")
         lines += ["end", ""]
 
         lines += [
@@ -5579,20 +5581,25 @@ class JuliaSectionBuilder:
         ]
         body: List[str] = []
         if from_p:
-            body.append("(; " + ", ".join(from_p) + ") = p")
+            body += _wrap_list("(; ", from_p, ") = p")
         body.append(f"{sv} = ComponentArray(zeros({n}), _state_axes)")
         if not from_observe:
             body += self._u0_assignments(u0_entries, sv)
+            body.append(f"return getdata({sv})")
         else:
+            n_stocks = len({e.split("=>", 1)[0].split("[")[0].strip() for e in u0_entries})
             body += [
-                f"for _ in 1:{n + 1}",
+                "# Initial values can depend on other stocks' initial values: they",
+                "# are computed again until they settle (each pass settles at least",
+                "# one more stock)",
+                f"for _ in 1:{n_stocks + 1}",
                 f"    _obs_init = observe({sv}, initial_time; p = p)",
             ]
             body += [f"    {tok} = get(_obs_init, \"{tok}\", 0.0)" for tok in from_observe]
             body.append(f"    {nv} = zero({sv})")
             body += ["    " + ln for ln in self._u0_assignments(u0_entries, nv)]
-            body += [f"    isequal({nv}, {sv}) && break", f"    {sv} = {nv}", "end"]
-        body.append(f"return getdata({sv})")
+            body += [f"    isequal({nv}, {sv}) && return getdata({nv})", f"    {sv} = {nv}", "end",
+                     'error("the initial values do not settle: they depend on each other in a cycle")']
         if self._ode_active_initial:
             # ACTIVE INITIAL gives its initial value while the stocks start
             body = (["_initialising[] = true", "try"] + ["    " + ln for ln in body]
@@ -5937,6 +5944,65 @@ class JuliaSectionBuilder:
 # ---------------------------------------------------------------------------
 # Utilities
 # ---------------------------------------------------------------------------
+
+_NUMBER = r"-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
+_NUMBER_CELL = re.compile(rf"(\s*)(\w+)\[(\d+)\] = ({_NUMBER})")
+
+
+def _fold_number_cells(lines: List[str]) -> List[str]:
+    """Consecutive number assignments to cells of one vector as one line:
+    ``x[1] = 0.0; x[2] = 0.0`` -> ``x[1:2] .= 0.0``; ``x[3] = 0.0;
+    x[5] = 0.0`` -> ``x[[3, 5]] .= 0.0``; different numbers ->
+    ``x[1:3] .= [1.0, 2.0, 3.0]``."""
+    out: List[str] = []
+    k = 0
+    while k < len(lines):
+        m = _NUMBER_CELL.fullmatch(lines[k])
+        if not m:
+            out.append(lines[k])
+            k += 1
+            continue
+        indent, name = m.group(1), m.group(2)
+        run = [(int(m.group(3)), m.group(4))]
+        j = k + 1
+        while j < len(lines):
+            m2 = _NUMBER_CELL.fullmatch(lines[j])
+            if not m2 or m2.group(1) != indent or m2.group(2) != name:
+                break
+            run.append((int(m2.group(3)), m2.group(4)))
+            j += 1
+        idx = [i for i, _ in run]
+        if len(run) == 1 or len(set(idx)) != len(idx):
+            out.extend(lines[k:j])
+        else:
+            if idx == list(range(idx[0], idx[0] + len(idx))):
+                where = f"{idx[0]}:{idx[-1]}"
+            else:
+                where = "[" + ", ".join(str(i) for i in idx) + "]"
+            values = [v for _, v in run]
+            value = values[0] if len(set(float(v) for v in values)) == 1 else \
+                "[" + ", ".join(values) + "]"
+            out.append(f"{indent}{name}[{where}] .= {value}")
+        k = j
+    return out
+
+
+def _wrap_list(start: str, items: List[str], end: str, width: int = 92) -> List[str]:
+    """``start`` + items separated by commas + ``end``, wrapped at *width*,
+    the continuation lines aligned with the first item."""
+    indent = " " * len(start)
+    lines, line = [], start
+    for k, item in enumerate(items):
+        text = item + ("," if k < len(items) - 1 else end)
+        if line not in (start, indent) and len(line) + 1 + len(text) > width:
+            lines.append(line.rstrip())
+            line = indent
+        line += ("" if line in (start, indent) else " ") + text
+    if not items:
+        line += end
+    lines.append(line)
+    return lines
+
 
 def _path_to_eq_var(path: Path) -> str:
     """Convert a module path like ``modules_model/Sector A/Sub1`` to ``sector_a_sub1_eqs``."""

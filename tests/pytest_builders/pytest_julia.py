@@ -8692,3 +8692,48 @@ delayed[dim]=
         assert "_df_pipe" not in state_map
         # the internal stock is still in the state, after level
         assert "_df_pipe_delayed = zeros(4, N_DIM)" in content
+
+
+class TestReadableLayout:
+    def test_number_cells_fold_into_one_line(self):
+        from pysd.builders.julia.julia_model_builder import _fold_number_cells
+        lines = ["    # units: t", "    x[1] = 0.0", "    x[2] = 0.0", "    x[3] = 0.0",
+                 "    y[3] = 0.0", "    y[5] = 0.0", "    z[1] = 1.0", "    z[2] = 2.5",
+                 "    w[1] = 1.0", "    w[2] = (a * 2.0)"]
+        assert _fold_number_cells(lines) == [
+            "    # units: t", "    x[1:3] .= 0.0", "    y[[3, 5]] .= 0.0",
+            "    z[1:2] .= [1.0, 2.5]", "    w[1] = 1.0", "    w[2] = (a * 2.0)"]
+
+    def test_long_lists_are_wrapped(self):
+        from pysd.builders.julia.julia_model_builder import _wrap_list
+        names = [f"variable_number_{k}" for k in range(12)]
+        lines = _wrap_list("    (; ", names, ") = p")
+        assert len(lines) > 1 and all(len(ln) <= 92 for ln in lines)
+        assert lines[0].startswith("    (; variable_number_0,")
+        assert all(ln.startswith("       variable") for ln in lines[1:])
+        assert lines[-1].endswith("variable_number_11) = p")
+        assert " ".join(ln.strip() for ln in lines) == "(; " + ", ".join(names) + ") = p"
+        assert _wrap_list("    p = (; ", [], ")") == ["    p = (; )"]
+
+    def test_initial_values_settle_or_fail(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+inflow=
+	level * 2
+	~
+	~		|
+
+delayed=
+	DELAY1(inflow, 3)
+	~
+	~		|
+
+level= INTEG (
+	delayed,
+		5)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert "for _ in 1:3\n" in init          # 2 stocks (level, the delay) + 1
+        assert "isequal(next, s) && return getdata(next)" in init
+        assert 'error("the initial values do not settle: they depend on each other in a cycle")' in init
