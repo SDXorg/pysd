@@ -157,6 +157,14 @@ builder prints each statement again with Julia's own parser and printer
 Julia the file keeps the extra parentheses, with a warning; set
 ``PYSD_JULIA_TIDY=0`` to skip this step.
 
+Three or more consecutive elements of a variable whose formulas differ only
+in the element index are written as one loop over those elements::
+
+   for i in 1:3
+       d.level[i] = flow[i] - flow[i + 1]
+   end
+   d.level[4] = flow[4]
+
 The generated file has these parts, in this order:
 
 ``params(; sheets, files, values...)``

@@ -4989,7 +4989,7 @@ class JuliaSectionBuilder:
             if lines[-1] != "":
                 lines.append("")
             lines.append("    # Computed from the constants")
-            lines += const_alloc + _fold_number_cells(body)
+            lines += const_alloc + _fold_cell_loops(_fold_number_cells(body))
         lines.append("")
         lines += _wrap_list("    p = (; ", p_names, ")")
         lines.append("    pysd_check_inputs(_given, p)")
@@ -5038,11 +5038,12 @@ class JuliaSectionBuilder:
                 commented.add(lhs)
                 dyn_lines.append(f"    # {comment}")
             dyn_lines.extend(f"    {ln}" for ln in converted)
-        lines += _fold_number_cells(dyn_lines)
+        lines += _fold_cell_loops(_fold_number_cells(dyn_lines))
         if ode_lines:
             lines.append("")
             lines.append("    # Rates of change")
             lines.append("    if d !== nothing")
+            rate_lines: List[str] = []
             for name in stock_indices:
                 if name in stock_dims and len(stock_dims[name]) >= 2:
                     lines.append(f"        du_{name} = d.{name}")
@@ -5052,9 +5053,10 @@ class JuliaSectionBuilder:
                 if m_stock and m_stock.group(1) not in commented:
                     commented.add(m_stock.group(1))
                     if m_stock.group(1) in self._var_comments:
-                        lines.append(f"        # {self._var_comments[m_stock.group(1)]}")
+                        rate_lines.append(f"        # {self._var_comments[m_stock.group(1)]}")
                 for ln in self._convert_ode_to_du(eq, stock_indices):
-                    lines.append("        " + self._du_to_named(ln, stock_indices, stock_sizes))
+                    rate_lines.append("        " + self._du_to_named(ln, stock_indices, stock_sizes))
+            lines += _fold_cell_loops(rate_lines)
             lines.append("    end")
         returned = list(dyn_names)
         if self._dynamic_controls():
@@ -6005,6 +6007,81 @@ def _fold_number_cells(lines: List[str]) -> List[str]:
             out.append(f"{indent}{name}[{where}] .= {value}")
         k = j
     return out
+
+
+_CELL_LINE = re.compile(r"(\s*)([\w.]+)\[(\d+)\] = (.+)")
+_INT_TOKEN = r"(?<![\w.])\d+(?![\w.])"
+
+
+def _fold_cell_loops(lines: List[str]) -> List[str]:
+    """Consecutive assignments to consecutive cells of one vector that
+    follow one formula of the cell's index, as a loop:
+    ``d.x[2] = f[2] - f[3]; d.x[3] = f[3] - f[4]`` ->
+    ``for i in 2:3  d.x[i] = f[i] - f[i + 1]  end``.  Each integer of the
+    formulas is the same in every line, or the index plus a constant."""
+    out: List[str] = []
+    k = 0
+    while k < len(lines):
+        m = _CELL_LINE.fullmatch(lines[k])
+        if not m or " = " in m.group(4):
+            out.append(lines[k])
+            k += 1
+            continue
+        indent, name = m.group(1), m.group(2)
+        run = [(int(m.group(3)), m.group(4))]
+        j = k + 1
+        while j < len(lines):
+            m2 = _CELL_LINE.fullmatch(lines[j])
+            if (not m2 or m2.group(1) != indent or m2.group(2) != name
+                    or int(m2.group(3)) != run[-1][0] + 1):
+                break
+            run.append((int(m2.group(3)), m2.group(4)))
+            j += 1
+        # groups of consecutive cells with the same formula (the last cell
+        # may differ, as x[n] = f[n] after x[i] = f[i] - f[i + 1])
+        start = 0
+        while start < len(run):
+            skeleton = re.sub(_INT_TOKEN, "#", run[start][1])
+            end = start + 1
+            while end < len(run) and re.sub(_INT_TOKEN, "#", run[end][1]) == skeleton:
+                end += 1
+            group = run[start:end]
+            loop = _loop_formula(group) if len(group) >= 3 else None
+            if loop is None:
+                out.extend(lines[k + start:k + end])
+            else:
+                var, formula = loop
+                out += [f"{indent}for {var} in {group[0][0]}:{group[-1][0]}",
+                        f"{indent}    {name}[{var}] = {formula}",
+                        f"{indent}end"]
+            start = end
+        k = j
+    return out
+
+
+def _loop_formula(run) -> Optional[Tuple[str, str]]:
+    """The formula of cells (index, formula) as one formula of a loop
+    variable, or None."""
+    texts = [f for _, f in run]
+    if len({re.sub(_INT_TOKEN, "#", f) for f in texts}) != 1:
+        return None
+    var = "i" if not any(re.search(r"\bi\b", f) for f in texts) else "_i"
+    found = [[int(x) for x in re.findall(_INT_TOKEN, f)] for f in texts]
+    parts = re.split(_INT_TOKEN, texts[0])
+    formula, used = parts[0], False
+    for c in range(len(found[0])):
+        column = [f[c] for f in found]
+        offsets = {v - idx for v, (idx, _) in zip(column, run)}
+        if len(set(column)) == 1:
+            piece = str(column[0])
+        elif len(offsets) == 1:
+            off = offsets.pop()
+            piece = var if off == 0 else (f"{var} + {off}" if off > 0 else f"{var} - {-off}")
+            used = True
+        else:
+            return None
+        formula += piece + parts[c + 1]
+    return (var, formula) if used else None
 
 
 def _wrap_list(start: str, items: List[str], end: str, width: int = 92) -> List[str]:

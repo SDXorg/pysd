@@ -8776,6 +8776,8 @@ class TestTidy:
             "    x = ((a * b) * c)  # units: t",
             "    y = pysd_ifelse((t < 2015.0), ((a + b) + c), (a - (b - c)))",
             "    z = ((a / b) * c)",
+            "    m = (((a - b) - c) - (d - e))",
+            "    n = (1.0 - (-2.0))",
             "    f = pysd_input(_given, :f, (x) -> f_itp(x))",
             '    w = get(_obs_init, "w#1", 0.0)',
             "    for _i0 in 1:N_A",
@@ -8784,11 +8786,13 @@ class TestTidy:
             "end",
         ]) + "\n")
         assert tidy_julia_file(path)
-        assert path.read_text().split("\n")[:9] == [
+        assert path.read_text().split("\n")[:11] == [
             "function model!(d, s, p, t)",
             "    x = a * b * c  # units: t",
             "    y = pysd_ifelse(t < 2015.0, a + b + c, a - (b - c))",
-            "    z = (a / b) * c",
+            "    z = a / b * c",
+            "    m = a - b - c - (d - e)",
+            "    n = 1.0 - (-2.0)",
             "    f = pysd_input(_given, :f, (x) -> f_itp(x))",     # kept as it is
             '    w = get(_obs_init, "w#1", 0.0)',
             "    for _i0 in 1:N_A",
@@ -9073,3 +9077,25 @@ block[sectors, sectors1]=
 	~		|
 """)
         assert "m[_i0, _i1 + 2]" in content, content
+
+
+class TestCellLoops:
+    """Consecutive cells that follow one formula of their index: a loop."""
+
+    def test_runs_become_loops(self):
+        from pysd.builders.julia.julia_model_builder import _fold_cell_loops
+        lines = ["        d.x[1] = f[1] - f[2]", "        d.x[2] = f[2] - f[3]",
+                 "        d.x[3] = f[3] - f[4]", "        d.x[4] = f[4]",
+                 "    y[2] = a * 2.0", "    y[3] = a * 2.0",          # two cells: kept
+                 "    z[1] = g(1, t)", "    z[2] = g(2, t)", "    z[3] = g(5, t)"]  # no formula
+        assert _fold_cell_loops(lines) == [
+            "        for i in 1:3", "        d.x[i] = f[i] - f[i + 1]".replace("        d", "            d"),
+            "        end", "        d.x[4] = f[4]",
+            "    y[2] = a * 2.0", "    y[3] = a * 2.0",
+            "    z[1] = g(1, t)", "    z[2] = g(2, t)", "    z[3] = g(5, t)"]
+
+    def test_loop_variable_does_not_hide_a_model_variable(self):
+        from pysd.builders.julia.julia_model_builder import _fold_cell_loops
+        lines = ["    x[2] = i * w[1]", "    x[3] = i * w[2]", "    x[4] = i * w[3]"]
+        assert _fold_cell_loops(lines) == [
+            "    for _i in 2:4", "        x[_i] = i * w[_i - 1]", "    end"]

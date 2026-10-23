@@ -5,8 +5,8 @@
 #
 # Each statement on one line is printed again by Julia's own printer, which
 # writes only the parentheses the expression needs: the expression is the same
-# (((a * b) * c) becomes a * b * c, pysd_ifelse((t < 2015.0), ...) becomes
-# pysd_ifelse(t < 2015.0, ...)).  Comments, and lines that are not a whole
+# (((a * b) * c) becomes a * b * c, ((a - b) - c) becomes a - b - c,
+# pysd_ifelse((t < 2015.0), ...) becomes pysd_ifelse(t < 2015.0, ...)).  Comments, and lines that are not a whole
 # statement, are kept as they are.  No packages are needed.
 
 # a statement as code: an assignment or a call
@@ -35,17 +35,63 @@ function _flatten(ex::Expr)
     return Expr(ex.head, args...)
 end
 
+# Printing with as few parentheses as the precedence rules allow: Julia's
+# printer keeps them in chains such as (a - b) - c and (a / b) * c.
+const _PREC = Dict(:+ => 2, :- => 2, :* => 3, :/ => 3,
+                   :< => 1, :> => 1, :<= => 1, :>= => 1, :(==) => 1, :!= => 1)
+
+_prec(x) = x isa Expr && x.head === :call && length(x.args) >= 2 && haskey(_PREC, x.args[1]) &&
+           !(x.args[1] in (:+, :-) && length(x.args) == 2) ? _PREC[x.args[1]] : 100
+
+function _print(x)
+    x isa Expr || return string(x)
+    if x.head === :call && haskey(_PREC, x.args[1])
+        op, args = x.args[1], x.args[2:end]
+        if length(args) == 1 && op in (:+, :-)                 # -x
+            a = args[1]
+            inner = _print(a)
+            return string(op, (_prec(a) < 100 || (a isa Number && a < 0)) ? "($inner)" : inner)
+        end
+        p = _PREC[op]
+        parts = String[]
+        for (k, a) in enumerate(args)
+            text = _print(a)
+            pa = _prec(a)
+            # the first operand may be at the same level (left to right);
+            # later ones need parentheses at the same level, so that
+            # a - (b - c) and a + (b + c) keep their meaning and form
+            needs = k == 1 ? pa < p || (p == 1 && pa == 1) : pa <= p || (a isa Number && a < 0)
+            push!(parts, needs ? "($text)" : text)
+        end
+        return join(parts, " $op ")
+    elseif x.head === :call
+        return string(_print(x.args[1]), "(", join(map(_print, x.args[2:end]), ", "), ")")
+    elseif x.head === :ref
+        return string(_print(x.args[1]), "[", join(map(_print, x.args[2:end]), ", "), "]")
+    elseif x.head in (:(=), :(.=))
+        return string(_print(x.args[1]), " ", x.head, " ", _print(x.args[2]))
+    end
+    return string(x)
+end
+
 # the statement printed again, or nothing (anonymous functions, macros,
 # interpolation and blocks are printed in other ways: kept as they are)
 function _reprint(code::AbstractString)
     occursin(r"->|@|\$|\bdo\b|\bbegin\b|\bfunction\b|\bend\b", code) && return nothing
     ex = _statement(code)
     ex === nothing && return nothing
-    text = string(_flatten(ex))
-    occursin('\n', text) && return nothing
+    flat = _flatten(ex)
     # the printed statement must read back as the same expression
-    Meta.parse(text) == _flatten(ex) || return nothing
-    return text
+    for text in (_print(flat), string(flat))
+        occursin('\n', text) && continue
+        parsed = try
+            Meta.parse(text)
+        catch
+            nothing
+        end
+        parsed == flat && return text
+    end
+    return nothing
 end
 
 # where a trailing comment starts, outside strings

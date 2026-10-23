@@ -55,6 +55,9 @@ New Features
 - Julia builder (ODE backend): when Julia is installed, the generated
   expressions have only the parentheses they need (printed again by Julia's
   own parser and printer, ``tidy.jl``; ``PYSD_JULIA_TIDY=0`` skips it).
+- Julia builder (ODE backend): three or more consecutive elements of a
+  variable with the same formula are written as one loop
+  (``for i in 1:3 ... x[i] = y[i] - y[i + 1] ... end``) instead of one line each.
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
