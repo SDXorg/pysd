@@ -66,26 +66,26 @@ LOGIC_OPS: dict = {
 # Keys are matched after .upper(), so include both "SPACE FORM" and "UNDERSCORE_FORM"
 # because the Vensim parser may store names either way.
 BUILTIN_FUNCTIONS: dict = {
-    # Basic math
+    # Basic math.  pysd_exp, pysd_ln, pysd_sin...: the C maths library, as in
+    # Python PySD (Julia's own functions differ in the last digit)
     "ABS": "abs",
-    "EXP": "exp",
-    "LN": "log",
-    "SQRT": "sqrt",
-    "SIN": "sin",
-    "COS": "cos",
-    "TAN": "tan",
-    "ARCSIN": "asin",
-    "ARCCOS": "acos",
-    "ARCTAN": "atan",
-    "SINH": "sinh",
-    "COSH": "cosh",
+    "EXP": "pysd_exp",
+    "LN": "pysd_ln",
+    "SQRT": "pysd_sqrt",
+    "SIN": "pysd_sin",
+    "COS": "pysd_cos",
+    "TAN": "pysd_tan",
+    "ARCSIN": "pysd_asin",
+    "ARCCOS": "pysd_acos",
+    "ARCTAN": "pysd_atan",
+    "SINH": "pysd_sinh",
+    "COSH": "pysd_cosh",
     "TANH": "tanh",
     "INTEGER": "pysd_trunc",
     "INT": "pysd_trunc",
     "POWER": "pysd_power",
     "MIN": "min",
     "MAX": "max",
-    "MODULO": "mod",
     "QUANTUM": "pysd_quantum",
     "PI": "pysd_pi",
     # Control flow — parser stores as "if_then_else" (underscores).
@@ -94,7 +94,8 @@ BUILTIN_FUNCTIONS: dict = {
     "IF THEN ELSE": "pysd_ifelse",
     "IF_THEN_ELSE": "pysd_ifelse",
     # Array operations
-    "SUM": "sum",
+    # numpy's pairwise order, as Python PySD (PySD.jl)
+    "SUM": "pysd_sum",
     "PROD": "prod",
     "VMAX": "maximum",
     "VMIN": "minimum",
@@ -140,8 +141,6 @@ BUILTIN_FUNCTIONS: dict = {
     "VECTOR RANK": "pysd_vector_rank",
     "VECTOR_RANK": "pysd_vector_rank",
     # Time value
-    "GET TIME VALUE": "pysd_get_time_value",
-    "GET_TIME_VALUE": "pysd_get_time_value",
 }
 
 # Names of helper functions provided by the PySD.jl companion package.
@@ -151,8 +150,9 @@ BUILTIN_FUNCTIONS: dict = {
 # (e.g. to pull in ``pysd_trunc`` when ``pysd_quantum`` is used).
 HELPER_IMPLEMENTATIONS: frozenset = frozenset({
     "pysd_trunc", "pysd_log_base", "pysd_xidz", "pysd_zidz",
+    "pysd_exp", "pysd_sin", "pysd_cos", "pysd_tan", "pysd_atan", "pysd_sinh", "pysd_cosh",
     "pysd_pulse", "pysd_pulse_train", "pysd_ramp", "pysd_step",
-    "pysd_active_initial", "pysd_ifelse",
+    "pysd_active_initial", "pysd_ifelse", "pysd_sum",
     "pysd_inv_mat2d_elem", "pysd_inv_mat3d_elem",
     "pysd_power", "pysd_quantum", "pysd_pi",
     "pysd_xpulse", "pysd_xpulse_train", "pysd_xramp",
@@ -288,17 +288,30 @@ class JuliaASTVisitor:
         lookup_names: Optional[Set[str]] = None,
         root=None,
         macro_names: Optional[Set[str]] = None,
+        bang_subs: Optional[Dict[str, str]] = None,
     ) -> None:
         self.namespace = namespace
         self.registry = inline_registry
         self.needed_helpers = needed_helpers
         # active_subs: dim_name -> julia index variable (e.g. {"sector": "_i"})
         self.active_subs = active_subs or {}
+        # Ranges of a definition that stand for the loop over another range,
+        # e.g. {"dim1up": "dim1"} for x[dim1up, d3] = ... inside x[dim1, dim2]:
+        # a reference y[dim1up] is then read as y[dim1].
+        self.sub_aliases: Dict[str, str] = {}
         # _clean_active_subs: normalised-dim-name -> julia index variable, for
         # case-insensitive lookup when subscript names appear as bare references.
         self._clean_active_subs = {
             re.sub(r"[^a-z0-9_]", "_", k.lower()): v
             for k, v in self.active_subs.items()
+        }
+        # _bang_subs: normalised-dim-name -> summation index of an enclosing
+        # SUM/PROD/VMAX/VMIN.  Separate from active_subs, which holds the
+        # equation's own loop variables: in share[A,B] = w[B] / SUM(w[B!]),
+        # B is _i1 but B! must be a summation index of its own.
+        self._bang_subs = {
+            re.sub(r"[^a-z0-9_]", "_", k.lower()): v
+            for k, v in (bang_subs or {}).items()
         }
         # var_dims: julia identifier -> list of dim names it is subscripted over
         self.var_dims = var_dims or {}
@@ -377,6 +390,39 @@ class JuliaASTVisitor:
         _scan(node)
         return result
 
+    def _summed_subs_last(self, node) -> bool:
+        """Whether the summed (!) subscripts are the last dimensions of the
+        array Python PySD sums: xarray puts the dimensions of each operand
+        after the ones already there, so x[A, B!] * y[B!] is (A, B!) and
+        y[B!] * x[A, B!] is (B!, A).  Elements (x[a1, B!]) are no dimension."""
+        order: List[str] = []
+
+        def _subs(ref) -> List[str]:
+            subs = getattr(ref, "subscripts", None)
+            return list(subs.subscripts) if subs is not None and hasattr(subs, "subscripts") else []
+
+        def _scan(n: Any) -> None:
+            if isinstance(n, ReferenceStructure):
+                found = _subs(n)
+            elif isinstance(n, CallStructure):
+                found = _subs(n.function)
+            else:
+                found = []
+            for sub in found:
+                clean = re.sub(r"[^a-z0-9_]", "_", sub.rstrip("!").lower())
+                is_dim = sub.endswith("!") or sub in self.subs_sizes or \
+                    clean in self._clean_subs_sizes
+                if is_dim and sub not in order:
+                    order.append(sub)
+            if isinstance(n, (CallStructure, ArithmeticStructure, LogicStructure)):
+                for arg in n.arguments:
+                    _scan(arg)
+
+        _scan(node)
+        summed = [k for k, sub in enumerate(order) if sub.endswith("!")]
+        kept = [k for k, sub in enumerate(order) if not sub.endswith("!")]
+        return not kept or not summed or max(kept) < min(summed)
+
     def _with_extra_subs(self, extra: Dict[str, str]) -> "JuliaASTVisitor":
         """Return a child visitor with *extra* entries added to active_subs."""
         return JuliaASTVisitor(
@@ -390,7 +436,30 @@ class JuliaASTVisitor:
             lookup_names=self.lookup_names,
             root=self._root,
             macro_names=self._macro_names,
+            bang_subs=self._bang_subs,
         )
+
+    def _with_bang_subs(self, extra: Dict[str, str]) -> "JuliaASTVisitor":
+        """Return a child visitor for an aggregation's argument: *extra* maps
+        the aggregated ('!') dimensions to their summation indices; the
+        equation's own loop variables (active_subs) are unchanged."""
+        return JuliaASTVisitor(
+            self.namespace,
+            self.registry,
+            self.needed_helpers,
+            active_subs=self.active_subs,
+            var_dims=self.var_dims,
+            subs_sizes=self.subs_sizes,
+            subs_elems=self.subs_elems,
+            lookup_names=self.lookup_names,
+            root=self._root,
+            macro_names=self._macro_names,
+            bang_subs={**self._bang_subs, **extra},
+        )
+
+    def _next_ii(self) -> int:
+        """First free summation-index number (nested aggregations don't shadow)."""
+        return len(set(self._bang_subs.values()))
 
     # ------------------------------------------------------------------
     # Dispatch
@@ -518,12 +587,31 @@ class JuliaASTVisitor:
             op = ARITHMETIC_OPS.get(ops[0], ops[0])
             return f"({op}{args[0]})"
 
-        # Build expression, using pysd_power for ^ to handle negative bases
+        if all(op == "^" for op in ops):
+            # A chain of powers is right-associative, as in Vensim and
+            # Python: a^b^c = a^(b^c)
+            exponent = args[-1]
+            for arg in reversed(args[1:-1]):
+                exponent = f"pysd_power({arg}, {exponent})"
+            base = node.arguments[0]
+            if isinstance(base, (int, float)) and base < 0:
+                # Vensim reads -2^2 as -(2^2), but the parser folds the
+                # literal into -2: negate after the power.
+                return f"(-pysd_power({self.visit(-base)}, {exponent}))"
+            return f"pysd_power({args[0]}, {exponent})"
+
+        # Build expression, using pysd_power for ^ (Vensim POWER semantics)
         result = args[0]
-        for op, arg in zip(ops, args[1:]):
+        base = node.arguments[0]
+        for i, (op, arg) in enumerate(zip(ops, args[1:])):
             julia_op = ARITHMETIC_OPS.get(op, op)
             if julia_op == "^":
-                result = f"pysd_power({result}, {arg})"
+                if i == 0 and isinstance(base, (int, float)) and base < 0:
+                    # Vensim reads -2^2 as -(2^2), but the parser folds the
+                    # literal into -2: negate after the power.
+                    result = f"(-pysd_power({self.visit(-base)}, {arg}))"
+                else:
+                    result = f"pysd_power({result}, {arg})"
             else:
                 result = f"({result} {julia_op} {arg})"
         return result
@@ -561,11 +649,19 @@ class JuliaASTVisitor:
         # Subscript dimension names appear as bare references in equations like
         # I_Matrix[s, s1] = IF_THEN_ELSE(s = s1, 1, 0).  When inside an active
         # subscript loop, emit the corresponding loop-index variable directly.
+        # As Python PySD, its value is the element's position in the *main*
+        # range (the largest range containing it), so subranges and ranges
+        # with another order compare and count like their main range.
         if self._clean_active_subs:
             clean_ref = re.sub(r"[^a-z0-9_]", "_", node.reference.lower())
-            idx_var = self._clean_active_subs.get(clean_ref)
-            if idx_var is not None:
-                return idx_var
+            alias = next((target for a, target in self.sub_aliases.items()
+                          if re.sub(r"[^a-z0-9_]", "_", a.lower()) == clean_ref), None)
+            if alias is not None:
+                clean_ref = re.sub(r"[^a-z0-9_]", "_", alias.lower())
+            dim = next((d for d in self.active_subs
+                        if re.sub(r"[^a-z0-9_]", "_", d.lower()) == clean_ref), None)
+            if dim is not None:
+                return self._main_position(dim, self.active_subs[dim])
 
         julia_name = self.namespace.get(node.reference)
         if julia_name is None:
@@ -574,17 +670,9 @@ class JuliaASTVisitor:
             # dimA: A, B, C).  When it is, emit the 1-based integer index so
             # comparisons like "dimA = B" become "_i0 == 2" in generated Julia.
             if clean_ref in self._clean_elem_index:
+                # Its position in its main range, as Python PySD
                 ranges_map = self._clean_elem_index[clean_ref]
-                # Prefer a range that is currently being iterated (active dim)
-                idx = None
-                for rng, pos in ranges_map.items():
-                    clean_rng = re.sub(r"[^a-z0-9_]", "_", rng.lower())
-                    if clean_rng in self._clean_active_subs:
-                        idx = pos
-                        break
-                if idx is None:
-                    idx = next(iter(ranges_map.values()))
-                return str(idx)
+                return str(ranges_map[self._largest_range(ranges_map)])
             warn(
                 f"Variable '{node.reference}' not found in namespace; "
                 "using a sanitised fallback identifier."
@@ -634,17 +722,26 @@ class JuliaASTVisitor:
                 bang_ranges: List[str] = []
                 ii_count = 0
                 dim_to_idx: Dict[str, str] = {}
+                # Index of each reference position (None = unresolved).  Vensim
+                # subscripts are positional: in io_matrix[sector1, sector!] the
+                # first index is sector1 whatever the declaration order.
+                pos_idx: List[Optional[str]] = []
 
-                for sub in node_subs:
+                for pos, sub in enumerate(node_subs):
+                    pos_idx.append(None)
                     clean_sub = re.sub(r"[^a-z0-9_]", "_", sub.lower())
                     if sub.endswith("!"):
                         bare = sub[:-1]
                         clean_bare = re.sub(r"[^a-z0-9_]", "_", bare.lower())
-                        if clean_bare in self._clean_active_subs:
-                            # Already being iterated by an outer loop (added by sum
-                            # handler) — reuse the existing loop variable.
-                            iv = self._clean_active_subs[clean_bare]
+                        if clean_bare in self._bang_subs:
+                            # Summed by the enclosing SUM/PROD/VMAX/VMIN:
+                            # reuse its summation index.
+                            iv = self._bang_subs[clean_bare]
                             dim_to_idx[clean_bare] = iv
+                            # a subrange's elements at their positions in the
+                            # variable's range
+                            pos_idx[pos] = self._index_in_var_dim(
+                                iv, bare, var_dims_list, pos)
                         else:
                             # Find the matching dim in var_dims_list (by normalised name)
                             dim_name = next(
@@ -656,8 +753,11 @@ class JuliaASTVisitor:
                             ii_count += 1
                             dim_to_idx[re.sub(r"[^a-z0-9_]", "_", dim_name.lower())] = iv
                             bang_ranges.append(f"{iv} in 1:{self._jl_n(dim_name)}")
+                            pos_idx[pos] = self._index_in_var_dim(
+                                iv, bare, var_dims_list, pos)
                     elif sub in self.active_subs:
                         dim_to_idx[clean_sub] = self.active_subs[sub]
+                        pos_idx[pos] = self.active_subs[sub]
                     elif sub in self.subs_elems:
                         idx_var = self.active_subs.get(sub)
                         if idx_var:  # pragma: no cover  # unreachable: elif subs_elems only runs when sub not in active_subs
@@ -669,14 +769,18 @@ class JuliaASTVisitor:
                             # var_dims_list can find it.  Also prefer the variable's
                             # own declared dim to avoid picking a larger parent range.
                             target_dim = None
+                            if (pos < len(var_dims_list)
+                                    and var_dims_list[pos] in self._elem_index[sub]):
+                                target_dim = var_dims_list[pos]
                             for d in var_dims_list:
-                                if d in self._elem_index[sub]:
+                                if target_dim is None and d in self._elem_index[sub]:
                                     target_dim = d
                                     break
                             if target_dim is None:
                                 target_dim = next(iter(self._elem_index[sub]))
                             clean_dim = re.sub(r"[^a-z0-9_]", "_", target_dim.lower())
                             dim_to_idx[clean_dim] = str(self._elem_index[sub][target_dim])
+                            pos_idx[pos] = dim_to_idx[clean_dim]
 
                 # Assemble indices in var_dims_list (declaration) order.
                 # When a dim name doesn't match any key in dim_to_idx (common when
@@ -689,7 +793,9 @@ class JuliaASTVisitor:
                     and re.sub(r"[^a-z0-9_]", "_", sub[:-1].lower()) in dim_to_idx
                 ]
                 used_ivars: set = set()
-                if var_dims_list:
+                if len(pos_idx) == len(var_dims_list) and None not in pos_idx:
+                    indices = pos_idx
+                elif var_dims_list:
                     indices = []
                     for d in var_dims_list:
                         clean_d = re.sub(r"[^a-z0-9_]", "_", d.lower())
@@ -736,7 +842,11 @@ class JuliaASTVisitor:
                         if key in dim_to_idx:
                             indices.append(dim_to_idx[key])
 
-                inner = f"{julia_name}[{', '.join(indices)}]"
+                if julia_name in self.lookup_names:
+                    # GET DATA / LOOKUPS functions are called, f(i, t)
+                    inner = f"{julia_name}({', '.join(indices + ['t'])})"
+                else:
+                    inner = f"{julia_name}[{', '.join(indices)}]"
                 if bang_ranges:
                     for_clause = ", ".join(bang_ranges)
                     return f"[{inner} for {for_clause}]"
@@ -751,11 +861,12 @@ class JuliaASTVisitor:
             # both resolve to the same variable.
             used_align_vars: set = set()
             for pos, sub in enumerate(node_subs):
+                sub = self.sub_aliases.get(sub, sub)
                 if sub in self.active_subs:
                     # Range name matching an active loop variable
                     lv = self.active_subs[sub]
-                    indices.append(lv)
                     used_align_vars.add(lv)
+                    indices.append(self._index_in_var_dim(lv, sub, var_dims_list, pos))
                 elif sub in self.subs_elems:
                     # Range name with all elements — use active loop var if available.
                     # First try direct name match, then fall back to element-set
@@ -785,7 +896,11 @@ class JuliaASTVisitor:
                                     aligned = lv
                                     break
                         if aligned:
-                            indices.append(aligned)
+                            # a subrange of the variable's own range mapped to
+                            # the active one (sec_map_0: (sec15-sec28) ->
+                            # sectors): its elements at their positions there
+                            indices.append(self._index_in_var_dim(
+                                aligned, sub, var_dims_list, pos))
                             used_align_vars.add(aligned)
                         # else: genuinely unresolvable — skip (rare)
                 else:
@@ -827,8 +942,189 @@ class JuliaASTVisitor:
 
         return julia_name
 
+    def bound_visit(self, node, bindings: Dict[str, str]) -> str:
+        """Visit *node* with some subscript ranges bound to other loop
+        variables (e.g. {"company": "_v"} to read a vector along company)."""
+        saved = (self.active_subs, self._clean_active_subs)
+        self.active_subs = {**self.active_subs, **bindings}
+        self._clean_active_subs = {
+            **self._clean_active_subs,
+            **{re.sub(r"[^a-z0-9_]", "_", k.lower()): v for k, v in bindings.items()},
+        }
+        try:
+            return self.visit(node)
+        finally:
+            self.active_subs, self._clean_active_subs = saved
+
+    def _vector_call(self, node: CallStructure, julia_func: str) -> Optional[str]:
+        """VECTOR SORT ORDER / RANK / REORDER on a subscripted variable.
+
+        As Python PySD, they work on the vector along the last subscript of
+        their first argument (``revenue[Region, company]``: along company).
+        The vector is built with a comprehension over that subscript, and the
+        element of this cell is taken with the variable's own last loop index
+        (``ranks[Region, scompany]``: scompany).
+        """
+        first = node.arguments[0]
+        subs = (first.subscripts.subscripts
+                if isinstance(first, ReferenceStructure) and first.subscripts is not None
+                else ())
+        if not subs or not self.active_subs or subs[-1] not in self.subs_elems:
+            return None
+        n = self._jl_n(subs[-1])
+        out_index = list(self.active_subs.values())[-1]
+
+        def as_vector(arg) -> str:
+            # the argument along its own last subscript, as [… for _v in 1:n]
+            last = (arg.subscripts.subscripts[-1]
+                    if isinstance(arg, ReferenceStructure) and arg.subscripts is not None
+                    else subs[-1])
+            saved = (self.active_subs, self._clean_active_subs)
+            clean = re.sub(r"[^a-z0-9_]", "_", last.lower())
+            self.active_subs = {**self.active_subs, last: "_v"}
+            self._clean_active_subs = {**self._clean_active_subs, clean: "_v"}
+            try:
+                return f"[{self.visit(arg)} for _v in 1:{n}]"
+            finally:
+                self.active_subs, self._clean_active_subs = saved
+
+        n_vectors = 2 if julia_func == "pysd_vector_reorder" else 1
+        vectors = [as_vector(a) for a in node.arguments[:n_vectors]]
+        rest = [self.visit(a) for a in node.arguments[n_vectors:]]
+        return f"{julia_func}({', '.join(vectors + rest)})[{out_index}]"
+
+    def _vector_select(self, node: CallStructure) -> str:
+        """VECTOR SELECT(selection[dim!], expression[dim!], missing, action,
+        error), as Python PySD: the selection and the expression are combined
+        over all the '!' dimensions of either (a selection over dim1! with an
+        expression over dim2! covers dim1 x dim2), so both are built as
+        arrays over the same dimensions, in the order they appear."""
+        sel, expr = node.arguments[0], node.arguments[1]
+        bangs: List[str] = []
+        for arg in (sel, expr):
+            for s in self._collect_bang_subs(arg):
+                dim = re.sub(r"[^a-z0-9_]", "_", s[:-1].lower())
+                if dim not in bangs:
+                    bangs.append(dim)
+        start = self._next_ii()
+        index = {dim: f"_ii{start + k}" for k, dim in enumerate(bangs)}
+        names = {re.sub(r"[^a-z0-9_]", "_", s[:-1].lower()): s[:-1]
+                 for arg in (sel, expr) for s in self._collect_bang_subs(arg)}
+        for_clause = ", ".join(f"{iv} in 1:{self._jl_n(names[d])}" for d, iv in index.items())
+        inner = self._with_bang_subs(index)
+
+        def array(arg) -> str:
+            value = inner.visit(arg)
+            return f"[{value} for {for_clause}]" if for_clause else value
+
+        rest = [self.visit(a) for a in node.arguments[2:]]
+        self.needed_helpers.add("pysd_vector_select")
+        return f"pysd_vector_select({array(sel)}, {array(expr)}, {', '.join(rest)})"
+
+    def _get_time_value(self, node: CallStructure) -> str:
+        """GET TIME VALUE(relative to, offset, measure), as Python PySD:
+        relative to 0 (the current time) with measure 0 (the model's time
+        units) is the current time plus the offset.  Python PySD does not
+        implement the other combinations (calendar or computer-clock
+        values) for simulated time either."""
+        relativeto, offset, measure = node.arguments
+        if relativeto == 0 and measure == 0:
+            return f"(t + {self.visit(offset)})"
+        warn(
+            f"GET TIME VALUE({relativeto}, …, {measure}) is not supported by "
+            "the Julia builder (only relative to 0 with measure 0); emitting NaN."
+        )
+        return "NaN"
+    def _index_in_var_dim(self, idx: str, sub: str, var_dims_list: List[str],
+                          pos: int) -> str:
+        """Index into the referenced variable's own dimension.
+
+        ``idx`` is the 1-based position of the current element within the
+        range ``sub``: a number in per-element expansion, or a loop variable
+        over ``sub``.  When the variable is
+        declared over another range containing that element (e.g.
+        ``aging[AGE]`` read as ``aging[ALL BUT YOUNGEST]``), the index is
+        the element's position in that range.
+        """
+        if pos >= len(var_dims_list):
+            return idx
+        target = var_dims_list[pos]
+        sub_elems = self.subs_elems.get(sub, [])
+        target_elems = self.subs_elems.get(target, [])
+        if target == sub or not sub_elems or not target_elems:
+            return idx
+        if any(e not in target_elems for e in sub_elems):
+            if all(e in sub_elems for e in target_elems) and not idx.isdigit():
+                # A loop over a larger range reading a variable defined over
+                # part of it (only the elements it has are reached)
+                table = [target_elems.index(e) + 1 if e in target_elems else 0
+                         for e in sub_elems]
+                return f"({', '.join(map(str, table))})[{idx}]"
+            return idx
+        positions = [target_elems.index(e) + 1 for e in sub_elems]
+        if idx.isdigit():
+            k = int(idx) - 1
+            return str(positions[k]) if 0 <= k < len(positions) else idx
+        # A loop variable over `sub`: shift it, or look it up when the
+        # elements are not contiguous in `target`
+        if positions == list(range(positions[0], positions[0] + len(positions))):
+            offset = positions[0] - 1
+            return f"{idx} + {offset}" if offset else idx
+        return f"({', '.join(map(str, positions))})[{idx}]"
+
+    def _main_range(self, name: str) -> str:
+        """The main range of a range, as Python PySD's subscript manager: the
+        largest range containing all its elements; between ranges with the
+        same elements, the first in alphabetical order."""
+        elems = set(self.subs_elems.get(name, []))
+        candidates = [
+            r for r, e in self.subs_elems.items()
+            if isinstance(e, list) and elems and elems <= set(e)
+        ]
+        return self._largest_range(candidates) or name
+
+    def _largest_range(self, candidates) -> Optional[str]:
+        candidates = list(candidates)
+        if not candidates:
+            return None
+        return min(candidates, key=lambda r: (-len(self.subs_elems.get(r, [])), r.lower()))
+
+    def _main_position(self, dim: str, idx: str) -> str:
+        """Position in the main range of the element at ``idx`` in ``dim``."""
+        main = self._main_range(dim)
+        dim_elems = self.subs_elems.get(dim, [])
+        main_elems = self.subs_elems.get(main, [])
+        if main == dim or not dim_elems:
+            return idx
+        positions = [main_elems.index(e) + 1 for e in dim_elems]
+        if idx.isdigit():
+            k = int(idx) - 1
+            return str(positions[k]) if 0 <= k < len(positions) else idx
+        if positions == list(range(positions[0], positions[0] + len(positions))):
+            offset = positions[0] - 1
+            return f"({idx} + {offset})" if offset else idx
+        return f"({', '.join(map(str, positions))})[{idx}]"
+
     def _call(self, node: CallStructure) -> str:
         func_upper = node.function.reference.upper()
+        if func_upper in ("GET TIME VALUE", "GET_TIME_VALUE"):
+            return self._get_time_value(node)
+        if func_upper.replace("_", " ") == "VECTOR SELECT":
+            return self._vector_select(node)
+        vector_func = {
+            "VECTOR SORT ORDER": "pysd_vector_sort_order",
+            "VECTOR RANK": "pysd_vector_rank",
+            "VECTOR REORDER": "pysd_vector_reorder",
+        }.get(func_upper.replace("_", " "))
+        if vector_func is not None:
+            vector_call = self._vector_call(node, vector_func)
+            if vector_call is not None:
+                return vector_call
+        if func_upper == "MODULO":
+            # Vensim's MODULO keeps the sign of x, in (-m, 0] for x < 0, as in
+            # Python PySD: x - QUANTUM(x, m) (Julia's mod would be in [0, m))
+            x, m = (self.visit(a) for a in node.arguments)
+            return f"({x} - pysd_quantum({x}, {m}))"
         julia_func = BUILTIN_FUNCTIONS.get(func_upper)
 
         if julia_func is None:
@@ -859,10 +1155,10 @@ class JuliaASTVisitor:
                         if sub.endswith("!"):
                             bare = sub[:-1]
                             clean_bare = re.sub(r"[^a-z0-9_]", "_", bare.lower())
-                            if clean_bare in self._clean_active_subs:
-                                # Already iterated by an outer SUM comprehension —
-                                # reuse the existing loop variable, don't add a new range.
-                                iv = self._clean_active_subs[clean_bare]
+                            if clean_bare in self._bang_subs:
+                                # Summed by the enclosing SUM comprehension —
+                                # reuse its index, don't add a new range.
+                                iv = self._bang_subs[clean_bare]
                                 dim_to_idx_c[clean_bare] = iv
                             else:
                                 dim_name = next(
@@ -1060,17 +1356,17 @@ class JuliaASTVisitor:
         # sum/prod/vmax/vmin with ! subscripts: generate ONE comprehension that
         # covers ALL references sharing the same ! dim, rather than separate
         # per-reference comprehensions that would be multiplied/added as arrays.
-        if julia_func in ("sum", "prod", "maximum", "minimum") and len(node.arguments) == 1:
+        if julia_func in ("pysd_sum", "prod", "maximum", "minimum") and len(node.arguments) == 1:
             bang_subs = self._collect_bang_subs(node.arguments[0])
             new_bang_subs = [
                 s for s in bang_subs
                 if re.sub(r"[^a-z0-9_]", "_", s[:-1].lower())
-                not in self._clean_active_subs
+                not in self._bang_subs
             ]
             if new_bang_subs:
                 extra_subs: Dict[str, str] = {}
                 agg_ranges: List[str] = []
-                ii_cnt = 0
+                ii_cnt = self._next_ii()
                 for sub in new_bang_subs:
                     bare = sub[:-1]
                     clean_bare = re.sub(r"[^a-z0-9_]", "_", bare.lower())
@@ -1079,10 +1375,16 @@ class JuliaASTVisitor:
                     extra_subs[bare] = iv
                     extra_subs[clean_bare] = iv
                     agg_ranges.append(f"{iv} in 1:{self._jl_n(bare)}")
-                child = self._with_extra_subs(extra_subs)
+                child = self._with_bang_subs(extra_subs)
                 arg_expr = child.visit(node.arguments[0])
-                for_clause_agg = ", ".join(agg_ranges)
-                return f"{julia_func}([{arg_expr} for {for_clause_agg}])"
+                # the last subscript varies fastest, as in numpy's (C)
+                # order: the elements are added in Python's order
+                for_clause_agg = ", ".join(reversed(agg_ranges))
+                if julia_func == "pysd_sum" and not self._summed_subs_last(node.arguments[0]):
+                    # numpy adds one element after the other when the summed
+                    # subscript is not the last one of the array
+                    return f"pysd_sum_seq({arg_expr} for {for_clause_agg})"
+                return f"{julia_func}({arg_expr} for {for_clause_agg})"
 
         args = [self.visit(a) for a in node.arguments]
 
@@ -1095,8 +1397,11 @@ class JuliaASTVisitor:
             if not isinstance(node.arguments[0], LogicStructure):
                 args[0] = f"({args[0]} != 0)"
 
-        # Time-dependent helpers receive the symbolic *t* as their first arg
+        # Time-dependent helpers receive the symbolic *t* as their first arg;
+        # XMILE pulses (magnitude / time_step during one step) also the time step
         if julia_func in _TIME_HELPERS:
+            if julia_func in ("pysd_xpulse", "pysd_xpulse_train"):
+                args = args + ["time_step"]
             return f"{julia_func}(t, {', '.join(args)})"
 
         return f"{julia_func}({', '.join(args)})"

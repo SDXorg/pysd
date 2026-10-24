@@ -31,7 +31,8 @@ setup(
     package_data={
         'translators': [
             '*/parsing_grammars/*.peg'
-        ]
+        ],
+        'pysd.builders.julia': ['tidy.jl'],
     },
     include_package_data=True
 )

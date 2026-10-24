@@ -22,6 +22,26 @@ from .lookups import Lookups
 _SPREADSHEET_EXTS = {'.xls', '.xlsx', '.xlsm', '.xlsb', '.odf', '.ods', '.odt'}
 
 
+def _excel_engine(ext):
+    """
+    The engine pandas reads a spreadsheet with: openpyxl for .xlsx and
+    .xlsm (pandas' default until now; pandas 3.1 announces calamine as the
+    new default), calamine for .xls when it is available (pandas 3.1
+    deprecates xlrd), otherwise pandas' own choice.
+    """
+    if ext in (".xlsx", ".xlsm"):
+        return "openpyxl"
+    if ext == ".xls":
+        try:
+            import python_calamine  # noqa: F401
+        except ImportError:
+            return None
+        major, minor = (int(x) for x in pd.__version__.split(".")[:2])
+        if (major, minor) >= (2, 2):  # calamine engine in pandas >= 2.2
+            return "calamine"
+    return None
+
+
 class Excels():
     """
     Class to save the read Excel files and thus avoid double reading
@@ -42,6 +62,8 @@ class Excels():
             if ext in _SPREADSHEET_EXTS:
                 read_func = pd.read_excel
                 read_kwargs['sheet_name'] = tab
+                if _excel_engine(ext):
+                    read_kwargs['engine'] = _excel_engine(ext)
             elif ext == '.csv':
                 read_func = pd.read_csv
                 if tab and not tab[0].isalnum():
@@ -1082,6 +1104,8 @@ class ExtSubscript(External):
         if ext in _SPREADSHEET_EXTS:
             read_func = pd.read_excel
             read_kwargs['sheet_name'] = self.tab
+            if _excel_engine(ext):
+                read_kwargs['engine'] = _excel_engine(ext)
         elif ext == '.csv':
             read_func = pd.read_csv
             if self.tab and not self.tab[0].isalnum():

@@ -12,8 +12,11 @@ Tests are organised into classes that mirror the modules they exercise:
 * ``TestModularBuild``            — modular file generation
 * ``TestTranslateToJulia``        — pysd.translate_to_julia entry point
 """
+import re
+import itertools
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from pysd.builders.julia.namespace import JuliaNamespaceManager, JULIA_KEYWORDS
@@ -25,7 +28,11 @@ from pysd.builders.julia.julia_expressions_builder import (
     format_vector,
     lookup_interpolation_code,
 )
+from pysd.builders.julia.macro_inliner import inline_macros
 from pysd.builders.julia.julia_model_builder import (
+    expand_subscript_ranges,
+    _cell_blocks,
+    _cell_block,
     JuliaModelBuilder,
     JuliaSectionBuilder,
     _path_to_eq_var,
@@ -72,6 +79,13 @@ from pysd.translators.structures.abstract_model import (
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _no_tidy(monkeypatch):
+    """These tests read the generated text as the builder writes it: without
+    the parentheses pass (tidy.jl, tested in TestTidy)."""
+    monkeypatch.setenv("PYSD_JULIA_TIDY", "0")
 
 def _make_section(
     elements=None,
@@ -485,18 +499,17 @@ class TestJuliaASTVisitor:
 
     @pytest.mark.parametrize("vensim_name,julia_name", [
         ("ABS", "abs"),
-        ("EXP", "exp"),
-        ("LN", "log"),
-        ("SQRT", "sqrt"),
-        ("SIN", "sin"),
-        ("COS", "cos"),
-        ("TAN", "tan"),
-        ("ARCSIN", "asin"),
-        ("ARCCOS", "acos"),
-        ("ARCTAN", "atan"),
+        ("EXP", "pysd_exp"),         # the C maths library, as Python
+        ("LN", "pysd_ln"),          # NaN out of the domain, as numpy
+        ("SQRT", "pysd_sqrt"),
+        ("SIN", "pysd_sin"),
+        ("COS", "pysd_cos"),
+        ("TAN", "pysd_tan"),
+        ("ARCSIN", "pysd_asin"),
+        ("ARCCOS", "pysd_acos"),
+        ("ARCTAN", "pysd_atan"),
         ("MIN", "min"),
         ("MAX", "max"),
-        ("MODULO", "mod"),
         ("INTEGER", "trunc"),
     ])
     def test_builtin_functions(self, vensim_name, julia_name):
@@ -589,7 +602,7 @@ class TestJuliaASTVisitor:
             arguments=(1.0,),
         )
         result = v.visit(node)
-        assert result == "sinh(1.0)"
+        assert result == "pysd_sinh(1.0)"
 
     def test_cosh_maps_directly(self):
         v, *_ = _visitor_with_namespace()
@@ -598,7 +611,7 @@ class TestJuliaASTVisitor:
             arguments=(1.0,),
         )
         result = v.visit(node)
-        assert result == "cosh(1.0)"
+        assert result == "pysd_cosh(1.0)"
 
     def test_tanh_maps_directly(self):
         v, *_ = _visitor_with_namespace()
@@ -640,14 +653,13 @@ class TestJuliaASTVisitor:
         assert "pysd_vector_sort_order" in result
         assert "pysd_vector_sort_order" in needed
 
-    def test_get_time_value_prepends_t(self):
+    def test_get_time_value_is_current_time_plus_offset(self):
         v, *_ = _visitor_with_namespace()
         node = CallStructure(
             function=ReferenceStructure(reference="get_time_value"),
-            arguments=(1.0, 2.0, 3.0),
+            arguments=(0, 2.0, 0),
         )
-        result = v.visit(node)
-        assert result.startswith("pysd_get_time_value(t,")
+        assert v.visit(node) == "(t + 2.0)"
 
     def test_xpulse_prepends_t(self):
         v, *_ = _visitor_with_namespace()
@@ -657,6 +669,15 @@ class TestJuliaASTVisitor:
         )
         result = v.visit(node)
         assert result.startswith("pysd_xpulse(t,")
+
+    def test_xpulse_passes_time_step(self):
+        """XMILE PULSE gives magnitude / time_step during one step: PySD.jl needs time_step."""
+        v, *_ = _visitor_with_namespace()
+        node = CallStructure(function=ReferenceStructure(reference="Xpulse"), arguments=(10.0, 5.0))
+        assert v.visit(node) == "pysd_xpulse(t, 10.0, 5.0, time_step)"
+        node = CallStructure(function=ReferenceStructure(reference="Xpulse_train"),
+                             arguments=(10.0, 3.0, 5.0))
+        assert v.visit(node) == "pysd_xpulse_train(t, 10.0, 3.0, 5.0, time_step)"
 
     def test_xramp_prepends_t(self):
         v, *_ = _visitor_with_namespace()
@@ -713,6 +734,16 @@ class TestJuliaASTVisitor:
         )
         result = v.visit(node)
         assert "input" in result
+
+    def test_call_to_a_macro_without_warning(self):
+        """A call to a Vensim macro is written with the macro's Julia name."""
+        import warnings
+        v = JuliaASTVisitor(JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+                            macro_names={"my_macro"})
+        node = CallStructure(function=ReferenceStructure("My Macro"), arguments=(1.0, 2.0))
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            assert v.visit(node) == "my_macro(1.0, 2.0)"
 
     def test_with_extra_subs_propagates_macro_names(self):
         ns = JuliaNamespaceManager()
@@ -970,7 +1001,7 @@ class TestJuliaModelBuilder:
         content = path.read_text()
         assert "build_initializeprob = false" in content
         assert "unknowns(sys)" in content
-        assert "get(u0_dict, x, 0.0)" in content
+        assert "get(u0_map, x, 0.0)" in content
 
     def test_output_contains_entrypoint_invocations(self, tmp_path):
         """Generated script must actually call run_model() and save_results() so
@@ -1217,7 +1248,7 @@ class TestTranslateToJulia:
         assert path.suffix == ".jl"
         content = path.read_text()
         assert "using OrdinaryDiffEq" in content
-        assert "function rhs!" in content
+        assert "function model!" in content
         assert "run_model" in content
 
 
@@ -1412,8 +1443,7 @@ class TestJuliaASTVisitorExtended:
         """SUM(f[dim!](t)) where f is a subscripted lookup must produce a single
         comprehension sum([f(_ii0, t) for _ii0 in 1:N_DIM]), not a nested one.
 
-        Regression for the pymedeas world model: historic_labour_compensation_share
-        was generated as sum([[f(_ii0,t) for _ii0 in 1:N] for _ii0 in 1:N]).
+        Regression: a SUM over a subscripted lookup was generated as sum([[f(_ii0,t) for _ii0 in 1:N] for _ii0 in 1:N]).
         """
         ns = JuliaNamespaceManager()
         ns.add_to_namespace("historic_labour_compensation")
@@ -1438,7 +1468,7 @@ class TestJuliaASTVisitorExtended:
             ],
         )
         result = v.visit(node)
-        assert result == "sum([historic_labour_compensation(_ii0, t) for _ii0 in 1:N_SECTORS])"
+        assert result == "pysd_sum(historic_labour_compensation(_ii0, t) for _ii0 in 1:N_SECTORS)"
 
 
 # ===========================================================================
@@ -1529,7 +1559,7 @@ class TestJuliaSectionBuilderInitial:
         init_ast = InitialStructure(initial=ReferenceStructure("Level"))
         comp = AbstractComponent(subscripts=[[], []], ast=init_ast)
         init_elem = AbstractElement(name="Init Value", components=[comp])
-        sb = _section_builder_from_elements([stock, init_elem])
+        sb = _section_builder_from_elements([stock, init_elem], backend="mtk")
         sb.build_section()
         assert any("@parameters init_value = 42.0" in d for d in sb.param_decls)
 
@@ -1539,7 +1569,7 @@ class TestJuliaSectionBuilderInitial:
         init_ast = InitialStructure(initial=ReferenceStructure("Base Rate"))
         comp = AbstractComponent(subscripts=[[], []], ast=init_ast)
         init_elem = AbstractElement(name="Init Rate", components=[comp])
-        sb = _section_builder_from_elements([const_elem, init_elem])
+        sb = _section_builder_from_elements([const_elem, init_elem], backend="mtk")
         sb.build_section()
         assert any("@parameters init_rate = 7.5" in d for d in sb.param_decls)
 
@@ -1593,7 +1623,7 @@ class TestJuliaSectionBuilderInitial:
         init_ast = InitialStructure(initial=ReferenceStructure("A"))
         init_comp = AbstractComponent(subscripts=[[], []], ast=init_ast)
         init_elem = AbstractElement(name="Init A", components=[init_comp])
-        sb = _section_builder_from_elements([stock, aux_elem, init_elem])
+        sb = _section_builder_from_elements([stock, aux_elem, init_elem], backend="mtk")
         sb.build_section()
         assert any("@parameters init_a = 99.0" in d for d in sb.param_decls)
 
@@ -1706,6 +1736,29 @@ class TestJuliaSectionBuilderExpansions:
         assert "eps(Float64)" in fallback_eq, (
             f"Fallback must clamp with eps(Float64), but got: {fallback_eq!r}"
         )
+
+    def test_delay_fixed_dynamic_fallback_subscripted(self):
+        """A subscripted DELAY FIXED with a delay time known only at run time:
+        one first-order ODE per element, with its initial value."""
+        import warnings
+        sr = _make_subscript_range("sector", ["A", "B"])
+        delay_ast = DelayFixedStructure(
+            input=ReferenceStructure("input_var"),
+            delay_time=ReferenceStructure("delay_var"),
+            initial=5.0,
+        )
+        comp = AbstractComponent(subscripts=[["sector"], []], ast=delay_ast)
+        elem = AbstractElement(name="Out", components=[comp])
+        sb = _section_builder_from_elements([elem], subscripts=[sr])
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            sb.build_section()
+        assert any("falling back to first-order ODE" in str(w.message) for w in caught)
+        all_eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
+        assert any(e.startswith("[D(_df_out[_i0]) ~ (") and "eps(Float64)" in e
+                   and "for _i0 in 1:N_SECTOR" in e for e in all_eqs), all_eqs
+        assert any(e.startswith("[out[_i0] ~ _df_out[_i0]") for e in all_eqs), all_eqs
+        assert "_df_out[1] => 5.0" in sb.u0_entries and "_df_out[2] => 5.0" in sb.u0_entries
 
     def test_delay_n_variable_order_uses_initial_value(self):
         """DELAY N whose order is a time-varying expression (e.g. 2 + STEP(1, 10))
@@ -2161,8 +2214,12 @@ class TestJuliaFileGeneration:
         sb.lookup_const_decls.append("const lut_itp = LinearInterpolation([1.0], [0.0])")
         sb.lookup_func_decls.append("lut(x) = lut_itp(x)")
         sb.lookup_register_decls.append("@register_symbolic lut(x::Real)")
-        block = sb._lookup_block()
-        assert "LinearInterpolation" in block
+        # ODE: the lookups are built in params(), where they can be replaced
+        assert sb._lookup_block() == ""
+        block = sb._equations_block([])
+        assert "    lut_itp = LinearInterpolation([1.0], [0.0])" in block
+        assert "    lut = pysd_input(_given, :lut, (x) -> lut_itp(x))" in block
+        assert "@register_symbolic" not in block
 
     def test_declarations_block_includes_subs_constants(self, tmp_path):
         sr = _make_subscript_range("energy_type", ["H", "S"])
@@ -2187,8 +2244,10 @@ class TestJuliaFileGeneration:
     def test_equations_block_empty(self, tmp_path):
         sb = self._minimal_sb(tmp_path)
         block = sb._equations_block([])
-        assert "function rhs!" in block
-        assert "function observe" in block
+        assert "function params(" in block
+        assert "function model!(d, s, p, t)" in block
+        assert "rhs!(du, u, p, t) = " in block
+        assert "function observe(u, t; p = _params)" in block
 
     def test_equations_block_empty_mtk(self, tmp_path):
         stock = _make_stock_element("S", 1.0, 10.0)
@@ -2209,7 +2268,7 @@ class TestJuliaFileGeneration:
         sb = self._minimal_sb(tmp_path)
         sb.u0_entries.clear()
         block = sb._u0_block()
-        assert block == "u0 = Float64[]\n"
+        assert block == "initial_state(p = _params) = Float64[]\n\nu0 = initial_state()\n"
 
     def test_u0_block_empty_mtk(self, tmp_path):
         stock = _make_stock_element("S", 1.0, 10.0)
@@ -2225,14 +2284,14 @@ class TestJuliaFileGeneration:
         sb.build_section()
         sb.u0_entries.clear()
         block = sb._u0_block()
-        assert block == "u0 = []\n"
+        assert block == "u0 = Pair{Num, Float64}[]\n"
 
     def test_ext_const_in_declarations_block(self, tmp_path):
         sb = self._minimal_sb(tmp_path)
         sb.ext_const_decls.append("const big_array = [1.0, 2.0]")
-        block = sb._declarations_block()
-        assert "External constants" in block
-        assert "big_array" in block
+        assert "big_array" not in sb._declarations_block()   # ODE: in params()
+        assert ("    big_array = pysd_input(_given, :big_array, pysd_safe([1.0, 2.0]))"
+                in sb._equations_block([]))
 
 
 # ===========================================================================
@@ -2521,9 +2580,9 @@ class TestCoverageGaps:
         loop dimension but with a different name), the expression visitor should
         resolve it to the current loop variable — not drop it.
 
-        Regression for pymedeas world model:
-          ia_matrix[sectors, sectors1] with active_subs {sectors:_i0, sectors1:_i1}
-          RHS: historic_ia_matrix[year2009, sectors_a_matrix, sectors_a_matrix1]
+        Regression:
+          m[rows, cols] with active_subs {rows:_i0, cols:_i1}
+          RHS: hist_m[year1, rows_b, cols_b]
           Expected: historic_ia_matrix[15, _i0, _i1]
           Broken:   historic_ia_matrix[15]  (sectors_a_matrix dropped)
         """
@@ -2578,9 +2637,9 @@ class TestCoverageGaps:
         """GET DATA / LOOKUPS variables referenced with explicit subscripts must
         use function-call syntax f(idx, t), NOT array-indexing syntax f[idx].
 
-        Regression for pymedeas world model:
-          invest_res_elec[res_elec] ~ ... * invest_cost_res_elec[res_elec]
-        where invest_cost_res_elec IS a GET_DIRECT_DATA lookup.
+        Regression:
+          invest[tech] ~ ... * invest_cost[tech]
+        where invest_cost IS a GET_DIRECT_DATA lookup.
         Expected: invest_cost_res_elec(_i0, t)
         Broken:   invest_cost_res_elec[_i0]   (MethodError at model load)
         """
@@ -2611,7 +2670,7 @@ class TestCoverageGaps:
         index must come from the variable's OWN dimension, not from a larger
         parent dimension that also contains the same element.
 
-        Regression for pymedeas world model:
+        Regression:
           final_sources        = [electricity, heat, liquids, gases, solids]  (size 5)
           matter_final_sources = [liquids, gases, solids]                     (size 3)
           potential_fe_gen[matter_final_sources]  (declared over sub-range)
@@ -2651,7 +2710,7 @@ class TestCoverageGaps:
         the variable's OWN declared dimension — and that index must appear in the
         generated comprehension alongside the aggregation loop variable.
 
-        Regression for pymedeas world model:
+        Regression:
           fuels                        = [electricity, heat, liquids, gases, solids]  (size 5)
           transport_modes_pkm          = [car, bus, train, air]  (size 4)
           transport_modes_pkm_commercial = [car, bus, train]     (size 3, sub-range)
@@ -3164,7 +3223,7 @@ class TestCoverageGaps:
         init_ast = InitialStructure(initial=gc_ast)
         comp = AbstractComponent(subscripts=[[], []], ast=init_ast)
         elem = AbstractElement(name="Init Ext", components=[comp])
-        sb = _section_builder_from_elements([elem], path=tmp_path/"m.mdl")
+        sb = _section_builder_from_elements([elem], path=tmp_path/"m.mdl", backend="mtk")
         sb.build_section()
         assert any("@parameters init_ext = 99.0" in d for d in sb.param_decls)
 
@@ -3182,7 +3241,7 @@ class TestCoverageGaps:
         init_ast = InitialStructure(initial=ReferenceStructure("Aux Val"))
         init_comp = AbstractComponent(subscripts=[[], []], ast=init_ast)
         init_elem = AbstractElement(name="Init Aux", components=[init_comp])
-        sb = _section_builder_from_elements([aux_elem, init_elem])
+        sb = _section_builder_from_elements([aux_elem, init_elem], backend="mtk")
         sb.build_section()
         assert any("@parameters init_aux = 42.0" in d for d in sb.param_decls)
 
@@ -3276,10 +3335,10 @@ class TestCoverageGaps:
         """Piecewise 2D constant: one GCS component covering a sub-range of the
         first dimension + one literal-0 component covering the complement.
 
-        Regression for pymedeas world model:
-          materials_for_o_m_per_capacity_installed_res_elec[RES_ELEC, materials]
-            - [RES_ELEC_DISPATCHABLE, materials] = 0  (literal, 4 elements)
-            - [RES_ELEC_VARIABLE, materials]    = GCS (4 elements from Excel)
+        Regression:
+          x[DIM, other]
+            - [SUB1, other] = 0    (literal, 4 elements)
+            - [SUB2, other] = GCS  (4 elements from Excel)
 
         The piecewise assembly must produce a 2D Julia matrix (shape 4×2 in the
         test), NOT a flat 1D vector of 4+2=6 zeros.
@@ -4240,7 +4299,7 @@ class TestExceptSubscriptExclusion:
         references to variables subscripted over that sub-range must use
         the 1-based index WITHIN the sub-range, not the parent dimension index.
 
-        Regression for pymedeas world model:
+        Regression:
           SECTORS_AND_HOUSEHOLDS = [H, A, B]  (parent dim, size 3)
           sectors                = [A, B]     (sub-range, size 2)
           my_var[sectors_and_households];  component: my_var[sectors] = other_var[sectors]
@@ -4359,104 +4418,130 @@ class TestExceptSubscriptExclusion:
 # Phase 3E — Macro support
 # ===========================================================================
 
-class TestMacroSupport:
+class TestMacroExpansion:
+    """Macros are expanded in place (macro_inliner): each call gets renamed
+    copies of the macro's elements, with the call's arguments for its params."""
 
-    def _two_section_model(self, tmp_path):
-        """AbstractModel with a main section and one macro section.
-
-        The macro element name 'My Macro' normalises to 'my_macro', matching
-        the section name, so it is correctly identified as the return value.
-        """
-        # Main section: simple stock
-        pop = _make_stock_element("Population", 1.0, 100.0)
-        controls = [
+    @staticmethod
+    def _controls():
+        return [
             _make_control_element("INITIAL TIME", 0.0),
             _make_control_element("FINAL TIME", 10.0),
             _make_control_element("TIME STEP", 1.0),
             _make_control_element("SAVEPER", 1.0),
         ]
-        main_section = _make_section(
-            elements=[pop] + controls,
-            path=tmp_path / "my_model.mdl",
-        )
 
-        # Macro section: element name matches macro name so it's the return value
-        macro_aux = _make_element("My Macro", 42.0)
-        macro_section = AbstractSection(
-            name="my_macro",
-            path=tmp_path / "my_model.mdl",
-            type="macro",
-            params=["Input"],
-            returns=["My Macro"],
-            subscripts=(),
-            elements=(macro_aux,),
-            constraints=(),
-            test_inputs=(),
-            split=False,
-            views_dict=None,
-        )
+    @staticmethod
+    def _macro(name, params, elements):
+        return AbstractSection(
+            name=name, path=Path("m.mdl"), type="macro", params=params,
+            returns=[], subscripts=(), elements=tuple(elements), constraints=(),
+            test_inputs=(), split=False, views_dict=None)
 
-        return AbstractModel(
-            original_path=tmp_path / "my_model.mdl",
-            sections=(main_section, macro_section),
-        )
+    @staticmethod
+    def _call(macro, *args):
+        return CallStructure(function=ReferenceStructure(macro), arguments=args)
 
-    def test_build_model_creates_main_jl(self, tmp_path):
-        model = self._two_section_model(tmp_path)
-        path = JuliaModelBuilder(model).build_model()
-        assert path.exists()
-        assert path.suffix == ".jl"
+    def _model(self, tmp_path, main_elements, macros):
+        main = _make_section(elements=list(main_elements) + self._controls(),
+                             path=tmp_path / "my_model.mdl")
+        return AbstractModel(original_path=tmp_path / "my_model.mdl",
+                             sections=(main, *macros))
 
-    def test_macro_section_creates_companion_file(self, tmp_path):
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        assert macro_file.exists()
+    def _double_macro(self):
+        """MY MACRO(input) = input * 2"""
+        body = ArithmeticStructure(operators=["*"],
+                                   arguments=(ReferenceStructure("input"), 2))
+        return self._macro("my_macro", ["input"], [_make_element("MY MACRO", body)])
 
-    def test_macro_file_contains_julia_function(self, tmp_path):
-        """ODE backend companion file defines a Julia function, not MTK equations."""
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        content = macro_file.read_text()
-        assert "function my_macro(" in content
+    def _stock_macro(self):
+        """STOCK MACRO(input, init) = INTEG(input, init)"""
+        integ = IntegStructure(flow=ReferenceStructure("input"),
+                               initial=ReferenceStructure("init"))
+        return self._macro("stock_macro", ["input", "init"],
+                           [_make_element("STOCK MACRO", integ)])
 
-    def test_macro_function_takes_params_as_args(self, tmp_path):
-        """Companion function signature includes macro params."""
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        content = macro_file.read_text()
-        assert "function my_macro(input)" in content
+    def test_inline_macros_substitutes_arguments(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_element("Rate", 3.0),
+            _make_element("Out", self._call("my_macro", ReferenceStructure("rate"))),
+        ], [self._double_macro()])
+        new = inline_macros(model)
+        assert len(new.sections) == 1
+        elements = {e.name: e.components[0].ast for e in new.sections[0].elements}
+        assert elements["Out"] == ReferenceStructure("out_my_macro_my_macro")
+        assert elements["out_my_macro_my_macro"] == ArithmeticStructure(
+            operators=["*"], arguments=(ReferenceStructure("rate"), 2))
 
-    def test_macro_file_contains_macro_name_comment(self, tmp_path):
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        content = macro_file.read_text()
-        assert "Macro my_macro" in content
+    def test_subscripted_parameter_takes_the_subscripts(self, tmp_path):
+        """A parameter used as input[dim] in the macro, called with a plain
+        name: the name with the macro's subscripts."""
+        body = ArithmeticStructure(operators=["*"], arguments=(
+            ReferenceStructure("input", SubscriptsReferenceStructure(("dim",))), 2))
+        macro = self._macro("sub_macro", ["input"], [_make_element("SUB MACRO", body)])
+        model = self._model(tmp_path, [
+            _make_element("Out", self._call("sub_macro", ReferenceStructure("rate")))],
+            [macro])
+        new = inline_macros(model)
+        elements = {e.name: e.components[0].ast for e in new.sections[0].elements}
+        assert elements["out_sub_macro_sub_macro"].arguments[0] == ReferenceStructure(
+            "rate", SubscriptsReferenceStructure(("dim",)))
 
-    def test_main_file_unaffected_by_macro(self, tmp_path):
-        """Main model still contains rhs! function even with a macro section."""
-        model = self._two_section_model(tmp_path)
-        path = JuliaModelBuilder(model).build_model()
-        content = path.read_text()
-        assert "function rhs!" in content
-        assert "population" in content
+    def test_model_without_macros_is_unchanged(self, tmp_path):
+        model = self._model(tmp_path, [_make_element("Rate", 3.0)], [])
+        assert inline_macros(model) is model
 
-    def test_main_file_includes_macro_companion(self, tmp_path):
-        """Main model has an include() statement for the macro companion file."""
-        model = self._two_section_model(tmp_path)
+    def test_no_companion_file_and_no_function(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_element("Rate", 3.0),
+            _make_element("Out", self._call("my_macro", ReferenceStructure("rate"))),
+        ], [self._double_macro()])
         path = JuliaModelBuilder(model).build_model()
         content = path.read_text()
-        assert 'include(' in content
-        assert 'my_macro' in content
+        assert not (tmp_path / "my_model_my_macro.jl").exists()
+        assert "function my_macro" not in content and "include(" not in content
+        assert ":out_my_macro_my_macro, rate * 2" in content.replace("(", "").replace(")", "")
 
-    def test_macro_params_no_namespace_warning(self, tmp_path):
-        """Macro params are in namespace; no 'not found' warning during translation."""
-        import warnings
-        from pathlib import Path
+    @pytest.mark.parametrize("backend", ["ode", "mtk"])
+    def test_stock_in_macro_becomes_a_model_stock(self, tmp_path, backend):
+        model = self._model(tmp_path, [
+            _make_element("Inflow", 5.0),
+            _make_element("Level", self._call("stock_macro", ReferenceStructure("inflow"), 1.1)),
+        ], [self._stock_macro()])
+        content = JuliaModelBuilder(model, backend=backend).build_model().read_text()
+        stock = "level_stock_macro_stock_macro"
+        assert "return 0.0" not in content
+        if backend == "ode":
+            assert f"s.{stock} = 1.1" in content                # initial value
+            assert f'("{stock}", 1, String[])' in content       # state map
+        else:
+            assert f"{stock} => 1.1" in content
+            assert f"D({stock}) ~ inflow" in content
+
+    def test_macro_calling_macro(self, tmp_path):
+        outer = self._macro("outer_macro", ["x"], [
+            _make_element("OUTER MACRO", self._call("my_macro", ReferenceStructure("x")))])
+        model = self._model(tmp_path, [
+            _make_element("Out", self._call("outer_macro", 4.0)),
+        ], [self._double_macro(), outer])
+        names = [e.name for e in inline_macros(model).sections[0].elements]
+        assert "out_outer_macro_outer_macro" in names
+        assert "out_outer_macro_outer_macro_my_macro_my_macro" in names
+
+    def test_two_calls_in_one_equation_get_distinct_copies(self, tmp_path):
+        both = ArithmeticStructure(operators=["+"], arguments=(
+            self._call("my_macro", 1.0), self._call("my_macro", 2.0)))
+        model = self._model(tmp_path, [_make_element("Out", both)],
+                            [self._double_macro()])
+        elements = {e.name: e.components[0].ast for e in inline_macros(model).sections[0].elements}
+        assert elements["Out"] == ArithmeticStructure(operators=["+"], arguments=(
+            ReferenceStructure("out_my_macro_my_macro"),
+            ReferenceStructure("out_my_macro_2_my_macro")))
+
+    def test_macro_model_translates_without_warnings(self, tmp_path):
+        """No 'not found in namespace' or 'Unknown Vensim function' warnings."""
         import shutil
+        import warnings
         mdl_src = Path("tests/test-models/tests/macro_expression/test_macro_expression.mdl")
         if not mdl_src.exists():
             pytest.skip("macro_expression model not found")
@@ -4466,207 +4551,9 @@ class TestMacroSupport:
             warnings.simplefilter("always")
             import pysd
             pysd.translate_to_julia(str(dst))
-        ns_warnings = [x for x in w if "not found in namespace" in str(x.message)]
-        assert not ns_warnings, f"Unexpected namespace warnings: {ns_warnings}"
-
-    def test_macro_call_no_unknown_function_warning(self, tmp_path):
-        """Calling a macro from the main section does not emit 'Unknown Vensim function'."""
-        import warnings
-        from pathlib import Path
-        import shutil
-        mdl_src = Path("tests/test-models/tests/macro_expression/test_macro_expression.mdl")
-        if not mdl_src.exists():
-            pytest.skip("macro_expression model not found")
-        dst = tmp_path / "test_macro_expression.mdl"
-        shutil.copy(mdl_src, dst)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            import pysd
-            pysd.translate_to_julia(str(dst))
-        unk_warnings = [x for x in w if "Unknown Vensim function" in str(x.message)]
-        assert not unk_warnings, f"Unexpected unknown-function warnings: {unk_warnings}"
-
-    def test_mtk_macro_companion_uses_equations_array(self, tmp_path):
-        """MTK backend macro companion file emits an Equation[] array, not a function."""
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model, backend="mtk").build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        assert macro_file.exists()
-        content = macro_file.read_text()
-        assert "my_macro_eqs = Equation[" in content
-        assert "ModelingToolkit" in content
-        assert "function my_macro(" not in content
-
-
-class TestMacroSupportCoverage:
-    """Cover remaining macro-section code paths."""
-
-    def test_macro_with_inline_lookup_and_json(self, tmp_path):
-        """Macro with inline lookup (json mode): companion file has DataInterpolations."""
-        lut_ast = InlineLookupsStructure(
-            argument=1.0,
-            lookups=LookupsStructure(
-                x=(0.0, 1.0), y=(0.0, 2.0),
-                x_limits=(0.0, 1.0), y_limits=(0.0, 2.0),
-                type="interpolate",
-            ),
-        )
-        comp = AbstractComponent(subscripts=[[], []], ast=lut_ast)
-        lut_elem = AbstractElement(name="Macro LUT", components=[comp])
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="lookup_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["Macro LUT"],
-            subscripts=(), elements=(lut_elem,),
-            constraints=(), test_inputs=(),
-            split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model, data_format="json").build_model()
-        macro_path = tmp_path / "m_lookup_macro.jl"
-        assert macro_path.exists()
-        content = macro_path.read_text()
-        assert "DataInterpolations" in content
-        assert "function lookup_macro(" in content
-        assert (tmp_path / "m_lookup_macro_data.json").exists()
-
-    def test_macro_with_const_only_emits_bare_return(self, tmp_path):
-        """ODE macro where all elements are constants → empty body_lines → line 396."""
-        const_elem = _make_element("My Const", 7.0, comp_class=AbstractUnchangeableConstant)
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="const_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["My Const"],
-            subscripts=(), elements=(const_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model).build_model()
-        content = (tmp_path / "m_const_macro.jl").read_text()
-        assert "function const_macro(" in content
-        assert "return " in content
-
-    def test_macro_with_stock_emits_placeholder_return(self, tmp_path):
-        """ODE macro containing a stock emits a 'return 0.0' placeholder (lines 368-373)."""
-        import warnings
-        stock_elem = _make_stock_element("My Level", 1.0, 0.0)
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="stateful_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["My Level"],
-            subscripts=(), elements=(stock_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            JuliaModelBuilder(model).build_model()
-        content = (tmp_path / "m_stateful_macro.jl").read_text()
-        assert "return 0.0" in content
-        assert "function stateful_macro(" in content
-
-    def test_mtk_macro_with_lookup_includes_datainterpolations(self, tmp_path):
-        """MTK macro with inline lookup includes DataInterpolations (line 427)."""
-        lut_ast = InlineLookupsStructure(
-            argument=1.0,
-            lookups=LookupsStructure(
-                x=(0.0, 1.0), y=(0.0, 2.0),
-                x_limits=(0.0, 1.0), y_limits=(0.0, 2.0),
-                type="interpolate",
-            ),
-        )
-        lut_elem = AbstractElement(
-            name="Lut Var",
-            components=[AbstractComponent(subscripts=[[], []], ast=lut_ast)],
-        )
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="lut_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["Lut Var"],
-            subscripts=(), elements=(lut_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model, backend="mtk").build_model()
-        content = (tmp_path / "m_lut_macro.jl").read_text()
-        assert "DataInterpolations" in content
-        assert "ModelingToolkit" in content
-
-    def test_mtk_macro_with_json_includes_json3(self, tmp_path):
-        """MTK macro with json data_format includes JSON3 (line 429)."""
-        aux_elem = _make_element("Macro Var", 42.0)
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="json_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["Macro Var"],
-            subscripts=(), elements=(aux_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model, backend="mtk", data_format="json").build_model()
-        content = (tmp_path / "m_json_macro.jl").read_text()
-        assert "JSON3" in content
-        assert "ModelingToolkit" in content
+        messages = [str(x.message) for x in w]
+        assert not [m for m in messages
+                    if "not found in namespace" in m or "Unknown Vensim function" in m]
 
 
 class TestGetConstantsPiecewise1D:
@@ -4864,7 +4751,6 @@ class TestMdlFileTranslation:
     requiring a Julia runtime.
     """
 
-    MORE_TESTS = Path("tests/more-tests")
 
     def _translate(self, mdl_path, tmp_path):
         import shutil
@@ -4877,17 +4763,17 @@ class TestMdlFileTranslation:
             jl_path = translate_to_julia(dst)
         return jl_path
 
-    def test_julia_data_structure_creates_jl_file(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_data_structure" / "test_julia_data_structure.mdl"
+    def test_julia_data_structure_creates_jl_file(self, tmp_path, julia_model):
+        mdl = julia_model("data_equation")
         if not mdl.exists():
             pytest.skip("julia_data_structure test model not found")
         jl_path = self._translate(mdl, tmp_path)
         assert jl_path.exists()
         assert jl_path.suffix == ".jl"
 
-    def test_julia_data_structure_emits_data_override_warning(self, tmp_path):
+    def test_julia_data_structure_emits_data_override_warning(self, tmp_path, julia_model):
         """AbstractData with a non-GET DATA equation (data-override) still warns."""
-        mdl = self.MORE_TESTS / "julia_data_structure" / "test_julia_data_structure.mdl"
+        mdl = julia_model("data_equation")
         if not mdl.exists():
             pytest.skip("julia_data_structure test model not found")
         import shutil, warnings
@@ -5016,8 +4902,8 @@ class TestMdlFileTranslation:
                           if "falling back to first-order ODE approximation" in str(w.message)]
         assert not fallback_warns, f"DELAY FIXED with constant delay time should not fall back: {fallback_warns}"
 
-    def test_julia_delay_fixed_no_warning(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+    def test_julia_delay_fixed_no_warning(self, tmp_path, julia_model):
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         import shutil, warnings
@@ -5030,32 +4916,32 @@ class TestMdlFileTranslation:
         user_warns = [w for w in captured if issubclass(w.category, UserWarning)]
         assert not user_warns, f"Expected no UserWarning, got: {user_warns}"
 
-    def test_julia_delay_fixed_emits_ode(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+    def test_julia_delay_fixed_emits_ode(self, tmp_path, julia_model):
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         jl_path = self._translate(mdl, tmp_path)
         content = jl_path.read_text()
         assert "_df_" in content
 
-    def test_julia_trend_emits_smooth_stock(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_trend" / "test_julia_trend.mdl"
+    def test_julia_trend_emits_smooth_stock(self, tmp_path, julia_model):
+        mdl = julia_model("trend")
         if not mdl.exists():
             pytest.skip("julia_trend test model not found")
         jl_path = self._translate(mdl, tmp_path)
         content = jl_path.read_text()
         assert "_sm_" in content
 
-    def test_julia_forecast_emits_smooth_stock(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_forecast" / "test_julia_forecast.mdl"
+    def test_julia_forecast_emits_smooth_stock(self, tmp_path, julia_model):
+        mdl = julia_model("forecast")
         if not mdl.exists():
             pytest.skip("julia_forecast test model not found")
         jl_path = self._translate(mdl, tmp_path)
         content = jl_path.read_text()
         assert "_sm_" in content
 
-    def test_julia_sample_if_true_emits_stock(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_sample_if_true" / "test_julia_sample_if_true.mdl"
+    def test_julia_sample_if_true_emits_stock(self, tmp_path, julia_model):
+        mdl = julia_model("sample_if_true")
         if not mdl.exists():
             pytest.skip("julia_sample_if_true test model not found")
         jl_path = self._translate(mdl, tmp_path)
@@ -5082,8 +4968,9 @@ class TestMdlFileTranslation:
         assert not integ_warns, f"IntegStructure must not warn as unsupported: {integ_warns}"
 
     def test_except_2d_integ_emits_ode_equations(self, tmp_path):
-        """The generated Julia for a 2D stock with EXCEPT must contain D(inventory[...]) ODE
-        equations, not placeholder 0.0 assignments.
+        """The generated Julia for a 2D stock with EXCEPT writes the rates of
+        change of every cell (as loops over blocks of cells), not placeholder
+        0.0 assignments.
         """
         import shutil, warnings
         mdl = Path("tests/test-models/tests/except/test_except.mdl")
@@ -5096,7 +4983,8 @@ class TestMdlFileTranslation:
             warnings.simplefilter("always")
             jl_path = translate_to_julia(dst)
         content = jl_path.read_text()
-        assert "D(inventory[" in content, "Expected ODE equations for inventory stock"
+        assert re.search(r"for _i0 in \[3\], _i1 in \[5\]\n\s+du_inventory\[_i0, _i1\] = ", content)
+        assert "D(inventory[" not in content      # not valid Julia in the ODE backend
 
     def test_subscripted_inline_lookup_no_unsupported_warning(self, tmp_path):
         """Inline lookup tables with per-element subscript assignments (e.g.
@@ -5178,9 +5066,9 @@ class TestMdlFileTranslation:
         # Should have delay pipeline variables from the inner DELAY3
         assert "_lv" in content, "Expected delay level variables from inner DELAY3"
 
-    def test_json_mode_produces_data_file(self, tmp_path):
+    def test_json_mode_produces_data_file(self, tmp_path, julia_model):
         """translate_to_julia with data_format=json creates a .json companion."""
-        mdl = self.MORE_TESTS / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         import shutil, warnings
@@ -5252,9 +5140,9 @@ class TestXmileDelayFixed:
             jl_path = translate_to_julia(xmile)
         content = jl_path.read_text()
         # The embedded delay must be lifted: _edf0 becomes an auxiliary backed
-        # by a pipeline stock (_df_pipe_1__edf0 etc.) in the ODE state vector.
+        # by a pipeline stock (_df_pipe__edf0) in the ODE state vector.
         assert "_edf0" in content
-        assert "_df_pipe_1__edf0" in content
+        assert "_df_pipe__edf0" in content
 
 
 class TestEmbeddedDelayDrain2D:
@@ -5618,7 +5506,7 @@ class TestBackendDispatch:
 
     def test_ode_parameters_become_const(self, tmp_path):
         content = self._build(tmp_path, "ode")
-        assert "const birth_rate = 0.03" in content
+        assert "birth_rate = pysd_input(_given, :birth_rate, 0.03)" in content
 
     def test_ode_no_at_parameters_declaration(self, tmp_path):
         content = self._build(tmp_path, "ode")
@@ -5632,7 +5520,8 @@ class TestBackendDispatch:
 
     def test_ode_uses_rhs_function(self, tmp_path):
         content = self._build(tmp_path, "ode")
-        assert "function rhs!(du, u, p, t)" in content
+        assert "function model!(d, s, p, t)" in content
+        assert "rhs!(du, u, p, t) = (model!(_named(du), _named(u), " in content
 
     def test_ode_no_equation_array(self, tmp_path):
         content = self._build(tmp_path, "ode")
@@ -5646,7 +5535,8 @@ class TestBackendDispatch:
 
     def test_ode_u0_is_float64_array(self, tmp_path):
         content = self._build(tmp_path, "ode")
-        assert "u0 = Float64[" in content
+        assert "function initial_state(p = _params)" in content
+        assert "s = ComponentArray(zeros(" in content and "return getdata(s)" in content
 
     def test_ode_u0_has_numeric_initial(self, tmp_path):
         content = self._build(tmp_path, "ode")
@@ -6463,8 +6353,9 @@ class TestSubscriptedExpansions:
     # Subscripted DELAY FIXED via MTK backend (lines 2134-2159)
     # ------------------------------------------------------------------
 
-    def test_subscripted_delay_fixed_mtk_emits_array_ode(self):
-        """DELAY FIXED on subscripted element with MTK backend uses array ODE (not pipeline)."""
+    def test_subscripted_delay_fixed_mtk_emits_pipeline(self):
+        """DELAY FIXED on a subscripted element with the MTK backend uses the
+        exact pipeline too (delay 2, time step 1 -> 2 stages)."""
         sr = self._sr("sector", ["S1", "S2"])
         ast = DelayFixedStructure(input=5.0, delay_time=2.0, initial=5.0)
         comp = self._sub_comp(["sector"], ast)
@@ -6472,10 +6363,28 @@ class TestSubscriptedExpansions:
         sb = _section_builder_from_elements([elem], subscripts=[sr], backend="mtk")
         sb.build_section()
         eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
-        assert any("_df_df_sub" in e for e in eqs), f"Expected delay-fixed array ODE, got {eqs}"
-        assert any("[" in d for d in sb.stock_decls)
-        u0_entries = [e for e in sb.u0_entries if "_df_df_sub" in e]
-        assert len(u0_entries) == 2, f"Expected 2 u0 entries for 2-element dim, got {sb.u0_entries}"
+        assert any("_df_pipe_df_sub[_k - 1, _i0]" in e for e in eqs), eqs
+        assert "@variables _df_pipe_df_sub(t)[1:2, 1:N_SECTOR]" in sb.stock_decls
+        # one entry per element, for its 2 stages
+        u0_entries = [e for e in sb.u0_entries if "_df_pipe_" in e]
+        assert u0_entries == ["_df_pipe_df_sub[1:2, 1] => 5.0",
+                              "_df_pipe_df_sub[1:2, 2] => 5.0"], sb.u0_entries
+
+    def test_delay_fixed_delay_time_evaluated_at_initial_time(self):
+        """As Python PySD, a changing delay time is read at the initial time:
+        2 + 2*SIN(Time) at t = 0 is 2 -> 2 stages with time step 1."""
+        sin_time = CallStructure(function=ReferenceStructure("sin"),
+                                 arguments=(ReferenceStructure("time"),))
+        delay = ArithmeticStructure(operators=["+"], arguments=(
+            2, ArithmeticStructure(operators=["*"], arguments=(2, sin_time))))
+        ast = DelayFixedStructure(input=5.0, delay_time=delay, initial=5.0)
+        elem = AbstractElement(name="DST", components=[
+            AbstractComponent(subscripts=[[], []], ast=ast)])
+        sb = _section_builder_from_elements(
+            [elem, _make_control_element("INITIAL TIME", 0.0),
+             _make_control_element("TIME STEP", 1.0)])
+        sb.build_section()
+        assert "@variables _df_pipe_dst(t)[1:2]" in sb.stock_decls, sb.stock_decls
 
     # ------------------------------------------------------------------
     # Subscripted SAMPLE IF TRUE (lines 2388-2415)
@@ -6726,7 +6635,7 @@ class TestExceptWithStateful:
             jl_path = JuliaModelBuilder(model).build_model()
         content = jl_path.read_text()
         # The scalarize equation should NOT appear verbatim in the rhs! function
-        assert "function rhs!" in content
+        assert "function model!" in content
 
     def test_except_1d_ode_model_alloc_needed(self, tmp_path):
         """ODE model with 1D EXCEPT constant emits per-index alloc lines (line 4330)."""
@@ -6749,7 +6658,7 @@ class TestExceptWithStateful:
         model = AbstractModel(original_path=tmp_path / "m_exc.mdl", sections=(section,))
         jl_path = JuliaModelBuilder(model).build_model()
         content = jl_path.read_text()
-        assert "function rhs!" in content
+        assert "function model!" in content
 
 
 # ===========================================================================
@@ -6792,6 +6701,25 @@ class TestSectionBuilderHelpers:
         # Both equations must appear in the result (just appended after circular detection)
         assert len(sorted_eqs) == 2
         assert set(sorted_eqs) == set(eqs)
+
+    def test_topo_sort_waits_for_every_part(self):
+        """A variable defined element by element is used only after all its
+        parts (a consumer used to read it before its 2nd and 3rd elements
+        were set)."""
+        sb = self._sb()
+        eqs = [
+            "pe[1] ~ 55.0",
+            "fe[_i0] ~ pe[_i0] * 2.0",
+            "pe[2] ~ geot",
+            "geot ~ 9.5",
+            "pe[3] ~ pe[1] + pe[2]",
+        ]
+        order = sb._topo_sort_equations(eqs, stock_names={})
+        assert order.index("fe[_i0] ~ pe[_i0] * 2.0") == 4, order
+        assert order.index("geot ~ 9.5") < order.index("pe[2] ~ geot")
+        # parts of one variable keep their order
+        assert order.index("pe[1] ~ 55.0") < order.index("pe[2] ~ geot") \
+            < order.index("pe[3] ~ pe[1] + pe[2]")
 
     # ------------------------------------------------------------------
     # _convert_eq_to_assignment malformed comprehension (line 4621)
@@ -7039,10 +6967,9 @@ class TestSectionBuilderHelpers:
         """Scalar ext_const entry (no '[') hits the else branch at line 4147 in ODE declarations."""
         sb = self._sb()
         sb.ext_const_decls.append("const my_scalar = 3.14")
-        block = sb._declarations_block()
-        assert "# External constants" in block
-        # No "[" in value and not xlsx → line 4147: append decl as-is
-        assert "const my_scalar = 3.14" in block
+        # No "[" in value and not xlsx: the value as it is, in params()
+        assert sb._ode_constant_decls() == ["const my_scalar = 3.14"]
+        assert "my_scalar = pysd_input(_given, :my_scalar, 3.14)" in sb._equations_block([])
 
     def test_declarations_block_mtk_ext_const(self):
         """MTK declarations block includes ext_const_decls entries (lines 4165-4172)."""
@@ -7353,3 +7280,1899 @@ class TestSectionBuilderHelpers:
         assert not any("99.0" in e for e in eqs)
         # comp1's equations must appear
         assert any("1.0" in e for e in eqs)
+
+
+class TestNdArrayLayout:
+    """Multi-dimensional arrays: state layout, per-element arrays, positional subscripts."""
+
+    def _sb(self):
+        return _section_builder_from_elements([_make_element("x", 1.0)])
+
+    def test_u0_entries_sorted_column_major(self):
+        """Multi-dim stock u0 entries follow Julia's column-major reshape order."""
+        sb = self._sb()
+        sb.u0_entries = [
+            "s[1, 1] => 1.0", "s[1, 2] => 2.0",
+            "s[2, 1] => 3.0", "s[2, 2] => 4.0",
+        ]
+        sb._sort_u0_entries()
+        assert sb.u0_entries == [
+            "s[1, 1] => 1.0", "s[2, 1] => 3.0",
+            "s[1, 2] => 2.0", "s[2, 2] => 4.0",
+        ]
+
+    def test_u0_entries_grouped_per_stock(self):
+        """Entries of one stock end up contiguous; stocks keep first-appearance order."""
+        sb = self._sb()
+        sb.u0_entries = ["a[1] => 1.0", "b => 5.0", "a[2] => 2.0"]
+        sb._sort_u0_entries()
+        assert sb.u0_entries == ["a[1] => 1.0", "a[2] => 2.0", "b => 5.0"]
+
+    def test_ndarray_component_eqs_maps_values_to_covered_cells(self):
+        """A (3, 2) array defined for x[A, B, e2] fills cells [i, j, 2] in order."""
+        import numpy as np
+        eqs = JuliaSectionBuilder._ndarray_component_eqs(
+            "x", np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]),
+            [[1, 2, 3], [1, 2], [2]],
+        )
+        assert eqs == [
+            "x[1, 1, 2] ~ 1.0", "x[1, 2, 2] ~ 2.0",
+            "x[2, 1, 2] ~ 3.0", "x[2, 2, 2] ~ 4.0",
+            "x[3, 1, 2] ~ 5.0", "x[3, 2, 2] ~ 6.0",
+        ]
+
+    def test_ndarray_component_eqs_rejects_non_arrays_and_wrong_sizes(self):
+        """Scalars and arrays that don't fit the covered cells fall back (None)."""
+        import numpy as np
+        assert JuliaSectionBuilder._ndarray_component_eqs("x", 1.0, [[1], [1, 2]]) is None
+        assert JuliaSectionBuilder._ndarray_component_eqs(
+            "x", np.array([1.0, 2.0, 3.0]), [[1], [1, 2]]) is None
+
+    def test_aggregation_subscripts_are_positional(self):
+        """io_matrix[sector1, sector!] keeps the reference's order even when the
+        declaration is [sector, sector1] and both ranges have the same elements
+        (transposition: output2[sector1] = SUM(input[sector!]*io_matrix[sector1, sector!]))."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("io matrix")
+        elems = ["agriculture", "industry", "transport"]
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            active_subs={"sector1": "_i0"},
+            var_dims={"io_matrix": ["sector", "sector1"]},
+            subs_sizes={"sector": 3, "sector1": 3},
+            subs_elems={"sector": elems, "sector1": elems},
+        )
+        node = ReferenceStructure(
+            "io matrix",
+            subscripts=SubscriptsReferenceStructure(subscripts=["sector1", "sector!"]),
+        )
+        assert v.visit(node) == "[io_matrix[_i0, _ii0] for _ii0 in 1:N_SECTOR]"
+
+    def test_aggregation_falls_back_to_size_match_when_not_positional(self):
+        """When a position can't be resolved (a range that is neither active nor
+        aggregated), indices fall back to matching the declared dims by size."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("io matrix")
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            var_dims={"io_matrix": ["sector", "region"]},
+            subs_sizes={"sector": 3, "sector_x": 3, "region": 2},
+            subs_elems={"sector": ["a", "b", "c"], "sector_x": ["a", "b", "c"],
+                        "region": ["r1", "r2"]},
+        )
+        node = ReferenceStructure(
+            "io matrix",
+            subscripts=SubscriptsReferenceStructure(subscripts=["sector_x!", "region"]),
+        )
+        assert v.visit(node) == "[io_matrix[_ii0] for _ii0 in 1:N_SECTOR_X]"
+
+    def test_aggregation_element_label_found_in_another_declared_dim(self):
+        """An element label that doesn't belong to the dim at its position is
+        resolved in whichever declared dim contains it."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("energy")
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            var_dims={"energy": ["fuels", "modes"]},
+            subs_sizes={"fuels": 2, "modes": 3},
+            subs_elems={"fuels": ["heat", "gas"], "modes": ["car", "bus", "train"]},
+        )
+        node = ReferenceStructure(
+            "energy",
+            subscripts=SubscriptsReferenceStructure(subscripts=["bus", "fuels!"]),
+        )
+        # "bus" is element 2 of modes; positions are kept as written
+        assert v.visit(node) == "[energy[2, _ii0] for _ii0 in 1:N_FUELS]"
+
+    def test_aggregation_falls_back_to_position_when_no_size_matches(self):
+        """Last resort: neither name nor size identifies the declared dim, so
+        the aggregation loop variable is used in declaration order."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("io matrix")
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            var_dims={"io_matrix": ["sector", "region"]},
+            subs_sizes={"sector": 3, "sector_y": 4, "region": 2},
+            subs_elems={"sector": ["a", "b", "c"], "sector_y": ["a", "b", "c", "d"],
+                        "region": ["r1", "r2"]},
+        )
+        node = ReferenceStructure(
+            "io matrix",
+            subscripts=SubscriptsReferenceStructure(subscripts=["sector_y!", "region"]),
+        )
+        assert v.visit(node) == "[io_matrix[_ii0] for _ii0 in 1:N_SECTOR_Y]"
+
+
+class TestAggregationOverEquationDims:
+    """SUM(x[B!]) inside an equation over B sums the whole dimension (SDXorg/pysd#504)."""
+
+    def _visitor(self, names, active, var_dims, sizes):
+        ns = JuliaNamespaceManager()
+        for n in names:
+            ns.add_to_namespace(n)
+        return JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            active_subs=active, var_dims=var_dims, subs_sizes=sizes,
+        )
+
+    @staticmethod
+    def _sum(arg):
+        return CallStructure(function=ReferenceStructure("SUM"), arguments=[arg])
+
+    @staticmethod
+    def _ref(name, *subs):
+        return ReferenceStructure(name, subscripts=SubscriptsReferenceStructure(subscripts=subs))
+
+    def test_sum_over_the_equation_dimension_gets_its_own_index(self):
+        """share[A,B] = weight[B] / SUM(weight[B!]): the SUM loops over all of B."""
+        v = self._visitor(["weight"], {"A": "_i0", "B": "_i1"},
+                          {"weight": ["B"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("weight", "B!"))) == \
+            "pysd_sum(weight[_ii0] for _ii0 in 1:N_B)"
+
+    def test_plain_reference_inside_the_sum_keeps_the_equation_index(self):
+        """Inside SUM(x[A, B!] * y[B]), y[B] is the equation's B, B! the summed one."""
+        v = self._visitor(["x", "y"], {"A": "_i0", "B": "_i1"},
+                          {"x": ["A", "B"], "y": ["B"]}, {"A": 2, "B": 3})
+        node = self._sum(ArithmeticStructure(
+            operators=["*"], arguments=[self._ref("x", "A", "B!"), self._ref("y", "B")]))
+        assert v.visit(node) == "pysd_sum_seq((x[_i0, _ii0] * y[_i1]) for _ii0 in 1:N_B)"
+
+    def test_sum_over_two_dimensions_in_numpy_order(self):
+        """SUM(x[A!, B!]) adds the elements as numpy (Python PySD): the last
+        subscript varies fastest, so B's loop comes first in the generator."""
+        v = self._visitor(["x"], {}, {"x": ["A", "B"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("x", "A!", "B!"))) == \
+            "pysd_sum(x[_ii0, _ii1] for _ii1 in 1:N_B, _ii0 in 1:N_A)"
+
+    def test_sum_over_a_first_subscript_adds_in_sequence(self):
+        """total[A] = SUM(x[B!, A]): B! is not the array's last dimension, so
+        numpy adds row after row (pysd_sum_seq); SUM(x[A, B!]) is pairwise."""
+        v = self._visitor(["x"], {"A": "_i0"}, {"x": ["B", "A"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("x", "B!", "A"))) == \
+            "pysd_sum_seq(x[_ii0, _i0] for _ii0 in 1:N_B)"
+        v = self._visitor(["x"], {"A": "_i0"}, {"x": ["A", "B"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("x", "A", "B!"))) == \
+            "pysd_sum(x[_i0, _ii0] for _ii0 in 1:N_B)"
+
+    def test_sum_order_follows_the_operands(self):
+        """y[B!] * x[A, B!] is an array (B!, A) in Python: added in sequence."""
+        v = self._visitor(["x", "y"], {"A": "_i0"}, {"x": ["A", "B"], "y": ["B"]},
+                          {"A": 2, "B": 3})
+        node = self._sum(ArithmeticStructure(
+            operators=["*"], arguments=[self._ref("y", "B!"), self._ref("x", "A", "B!")]))
+        assert v.visit(node).startswith("pysd_sum_seq(")
+
+    def test_bang_function_call_over_the_equation_dimension(self):
+        """A subscripted call f[B!](...) in an equation over B loops over all of B."""
+        v = self._visitor(["f"], {"B": "_i1"}, {"f": ["B"]}, {"B": 3})
+        node = CallStructure(function=self._ref("f", "B!"), arguments=[1.0])
+        result = v.visit(node)
+        assert "_ii0 in 1:N_B" in result and "_i1" not in result
+
+
+class TestModulo:
+    """Vensim MODULO keeps the sign of x (Python PySD: x - QUANTUM(x, m))."""
+
+    def test_modulo_is_x_minus_quantum(self):
+        v, *_ = _visitor_with_namespace(["stocka"])
+        node = CallStructure(
+            function=ReferenceStructure(reference="MODULO"),
+            arguments=[ReferenceStructure("stocka"), 3])
+        assert v.visit(node) == "(stocka - pysd_quantum(stocka, 3.0))"
+
+
+class TestPowerPrecedence:
+    """Vensim reads -2^2 as -(2^2) = -4; PySD's parser folds the literal into -2."""
+
+    def test_negative_literal_base_is_negated_after_the_power(self):
+        v, *_ = _visitor_with_namespace()
+        node = ArithmeticStructure(operators=["^"], arguments=[-2, 2])
+        assert v.visit(node) == "(-pysd_power(2.0, 2.0))"
+
+    def test_positive_literal_base_unchanged(self):
+        v, *_ = _visitor_with_namespace()
+        node = ArithmeticStructure(operators=["^"], arguments=[2, 3])
+        assert v.visit(node) == "pysd_power(2.0, 3.0)"
+
+    def test_variable_base_is_not_negated(self):
+        """x^2 with x = -2 is 4 (pysd_power handles the sign of a variable base)."""
+        v, *_ = _visitor_with_namespace(["x"])
+        node = ArithmeticStructure(operators=["^"], arguments=[ReferenceStructure("x"), 2])
+        assert v.visit(node) == "pysd_power(x, 2.0)"
+
+
+class TestNonNegativeStocks:
+    """XMILE non-negative stocks: the flow is limited to -stock / time_step,
+    so an Euler step never takes the stock below zero (as NonNegativeInteg)."""
+
+    @staticmethod
+    def _equations(elements, name, **kwargs):
+        sb = _section_builder_from_elements(elements, **kwargs)
+        sb.build_section()
+        return sb.built_elements[name][0]
+
+    def test_scalar_non_negative_stock_limits_its_flow(self):
+        integ = IntegStructure(flow=ReferenceStructure("Outflow"), initial=10.0,
+                               non_negative=True)
+        stock = AbstractElement(name="Stock", components=[
+            AbstractComponent(subscripts=[[], []], ast=integ)])
+        eqs = self._equations([stock, _make_element("Outflow", -3.0)], "stock")
+        assert "D(stock) ~ max(outflow, -stock / time_step)" in eqs
+
+    def test_regular_stock_is_unchanged(self):
+        stock = _make_stock_element("Stock", ReferenceStructure("Outflow"), 10.0)
+        eqs = self._equations([stock, _make_element("Outflow", -3.0)], "stock")
+        assert "D(stock) ~ outflow" in eqs
+
+    def test_subscripted_non_negative_stock_limits_each_element(self):
+        integ = IntegStructure(
+            flow=ReferenceStructure("Outflow", subscripts=(["dim"],)),
+            initial=10.0, non_negative=True)
+        stock = _make_subscripted_element("Stock", integ, "dim")
+        outflow = _make_subscripted_element("Outflow", -3.0, "dim")
+        eqs = self._equations([stock, outflow], "stock",
+                              subscripts=[_make_subscript_range("dim", ["a", "b"])])
+        assert any("max(" in e and "-stock[_i0] / time_step)" in e for e in eqs), eqs
+
+
+class TestInitialValuesOfTimeAndFunctions:
+    """DELAY1(Time, ABS(constant)) (test-models arguments): its initial value
+    uses Time, which is the initial time there, and calls functions whose
+    names must not be bound as variables in the initial-value block."""
+
+    def test_time_is_initial_time_and_functions_are_not_bound(self, tmp_path):
+        import shutil, warnings
+        mdl = Path("tests/test-models/tests/arguments/test_arguments.mdl")
+        if not mdl.exists():
+            pytest.skip("arguments test model not found")
+        dst = tmp_path / mdl.name
+        shutil.copy(mdl, dst)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            content = translate_to_julia(dst).read_text()
+        u0 = content[content.index("function initial_state("):]
+        u0 = u0[:u0.index("\nend\n")]
+        assert "initial_time * abs(constant) / 3" in u0
+        assert "pysd_pulse(initial_time, constant, 2.0)" in u0
+        assert "abs = get(" not in u0 and "mod = get(" not in u0
+        assert "pysd_pulse = get(" not in u0
+
+
+class TestDynamicControlVariables:
+    """FINAL TIME, TIME STEP and SAVEPER that depend on Time or on model
+    variables (test-models control_vars, dynamic_final_time) are evaluated at
+    every step, as Python PySD."""
+
+    def _translate(self, tmp_path, folder, name, kind="tests"):
+        import shutil, warnings
+        mdl = Path(f"tests/test-models/{kind}/{folder}/{name}")
+        if not mdl.exists():
+            pytest.skip(f"{folder} test model not found")
+        dst = tmp_path / mdl.name
+        shutil.copy(mdl, dst)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return translate_to_julia(dst).read_text()
+
+    def test_controls_depending_on_time(self, tmp_path):
+        content = self._translate(tmp_path, "control_vars", "test_control_vars.mdl")
+        assert "time_step    = pysd_ifelse((initial_time < 4.0), 1.0, 0.5)" in content
+        assert "_ctrl_saveper = pysd_ifelse((t < 10.0), _ctrl_time_step, 5.0)" in content
+        assert "final_time = _ctrl_final_time" in content
+        assert "t + prec < c[\"final_time\"] || break" in content
+        assert "DiffEqArray(us, ts)" in content
+
+    def test_final_time_depending_on_a_variable(self, tmp_path):
+        content = self._translate(tmp_path, "dynamic_final_time", "test_dynamic_final_time.mdl")
+        assert "_ctrl_final_time = pysd_ifelse((my_control_var > 50.0), t, max_time)" in content
+        # at module level the variable is not known: the start value comes from observe
+        assert "final_time   = initial_time" in content
+        assert 'global final_time = _c["final_time"]' in content
+
+    def test_constant_controls_keep_the_solver(self, tmp_path):
+        content = self._translate(tmp_path, "teacup", "teacup.mdl", kind="samples")
+        assert "_ctrl_" not in content
+        assert "solve(ODEProblem(rhs!, u0, tspan, _problem_p(params)), solver; dt=dt, adaptive=false, kwargs...)" in content
+
+class TestArrayConstantOde:
+    """unchangeable tabbed array[country, blood type] == TABBED ARRAY(...)
+    (test-models tabbed_arrays): the ODE backend writes a plain constant
+    array, in Julia's column-major layout."""
+
+    def test_2d_unchangeable_constant_is_a_matrix(self, tmp_path):
+        rows = _make_subscript_range("country", ["c1", "c2", "c3"])
+        cols = _make_subscript_range("blood", ["b1", "b2", "b3", "b4"])
+        elem = AbstractElement(name="unchangeable tabbed array", components=[
+            AbstractUnchangeableConstant(subscripts=(["country", "blood"], []),
+                                         ast=np.arange(1.0, 13.0).reshape(3, 4))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls,
+                                subscripts=[rows, cols], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert ("unchangeable_tabbed_array = pysd_input(_given, :unchangeable_tabbed_array, permutedims(reshape("
+                "Float64[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0], "
+                "N_BLOOD, N_COUNTRY), (2, 1))") in content
+
+
+class TestSubscriptedDelayFixedArguments:
+    """R delayed subs[Dim1] = DELAY FIXED(R subs[Dim1], 7, R subs[Dim1])
+    (test-models forecast): input and initial value are read per element."""
+
+    def test_pipeline_reads_each_element(self, tmp_path):
+        dim1 = _make_subscript_range("Dim1", ["A", "B"])
+        r = AbstractElement(name="R subs", components=[
+            AbstractComponent(subscripts=(["Dim1"], []), ast=np.array([1.0, 2.0]))])
+        ref = ReferenceStructure("R subs", SubscriptsReferenceStructure(("Dim1",)))
+        delayed = AbstractElement(name="R delayed subs", components=[
+            AbstractComponent(subscripts=(["Dim1"], []),
+                              ast=DelayFixedStructure(ref, 2.0, ref))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 4.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[r, delayed] + controls,
+                                subscripts=[dim1], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert ("(_k == 1 ? r_subs[_i0] : _df_pipe_r_delayed_subs[_k - 1, _i0])"
+                in content)
+        # every stage of each element starts at that element: one line, the
+        # stage first (the order of the state vector)
+        assert "s._df_pipe_r_delayed_subs .= [r_subs[i] for _ in 1:2, i in 1:2]" in content
+
+
+class TestSumOverSubrange:
+    """total = SUM(generation[SUB!]): the sum
+    over a subrange reads the subrange's elements of a variable defined over
+    the full range, not its first elements."""
+
+    def test_sum_reads_subrange_elements(self, tmp_path):
+        tech = _make_subscript_range("Tech", ["A", "B", "C", "D"])
+        var = _make_subscript_range("Var", ["C", "D"])
+        gen = AbstractElement(name="Gen", components=[
+            AbstractComponent(subscripts=(["Tech"], []),
+                              ast=np.array([1.0, 2.0, 3.0, 4.0]))])
+        total = AbstractElement(name="Total", components=[
+            AbstractComponent(subscripts=([], []), ast=CallStructure(
+                ReferenceStructure("sum"),
+                (ReferenceStructure("Gen", SubscriptsReferenceStructure(("Var!",))),)))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[gen, total] + controls,
+                                subscripts=[tech, var], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "pysd_sum(gen[_ii0 + 2] for _ii0 in 1:N_VAR)" in content, content
+
+
+class TestPartsOverSubranges:
+    """x[Disp, Mat] = 0; x[Var, Mat] = y[Var, Mat] + 1: each part covers
+    its own subrange; the second part used to be dropped."""
+
+    def test_each_part_covers_its_subrange(self, tmp_path):
+        tech = _make_subscript_range("Tech", ["A", "B", "C", "D"])
+        disp = _make_subscript_range("Disp", ["A", "B"])
+        var = _make_subscript_range("Var", ["C", "D"])
+        mat = _make_subscript_range("Mat", ["m1", "m2"])
+        y = AbstractElement(name="Y", components=[
+            AbstractComponent(subscripts=(["Tech", "Mat"], []),
+                              ast=np.arange(1.0, 9.0).reshape(4, 2))])
+        x = AbstractElement(name="X", components=[
+            AbstractComponent(subscripts=(["Disp", "Mat"], []), ast=0.0),
+            AbstractComponent(subscripts=(["Var", "Mat"], []), ast=ArithmeticStructure(
+                operators=["+"], arguments=(
+                    ReferenceStructure("Y", SubscriptsReferenceStructure(("Var", "Mat"))),
+                    1.0)))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[y, x] + controls,
+                                subscripts=[tech, disp, var, mat], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "for _i0 in [1, 2], _i1 in 1:N_MAT\n        x[_i0, _i1] = 0.0" in content, content
+        assert ("for _i0 in [3, 4], _i1 in 1:N_MAT\n        x[_i0, _i1] = (y[_i0, _i1] + 1.0)"
+                in content), content
+
+
+class TestConstantAndEquationParts:
+    """x[A] = GET DIRECT CONSTANTS(...); x[B] = y * 2; ...: every element gets its own part, instead of
+    the first constant everywhere."""
+
+    def test_each_element_gets_its_part(self, tmp_path):
+        tech = _make_subscript_range("Tech", ["A", "B", "C"])
+        y = AbstractElement(name="Y", components=[
+            AbstractComponent(subscripts=([], []), ast=5.0)])
+        x = AbstractElement(name="X", components=[
+            AbstractComponent(subscripts=(["A"], []), ast=GetConstantsStructure(
+                file="data.xlsx", tab="S", cell="B2")),
+            AbstractComponent(subscripts=(["B"], []), ast=ArithmeticStructure(
+                operators=["*"], arguments=(ReferenceStructure("Y"), 2.0))),
+            AbstractComponent(subscripts=(["C"], []), ast=GetConstantsStructure(
+                file="data.xlsx", tab="S", cell="B3")),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[y, x] + controls,
+                                subscripts=[tech], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert '_x_constant_0 = pysd_input(_given, :_x_constant_0, pysd_safe(pysd_xlsx_read_constant(' \
+            '_file("data.xlsx"), _sheet("S"), "B2")))' in content, content
+        assert "x[1] = _x_constant_0" in content
+        assert "x[2] = (y * 2.0)" in content
+        assert "x[3] = _x_constant_2" in content
+
+
+class TestDataPartsOrder:
+    """share[liquids] = GET DIRECT DATA(...), share[solids] = ...,
+    share[gases] = ... over a range (liquids, gases, solids): each series sits at its
+    element's position, not in definition order."""
+
+    def test_series_at_element_positions(self, tmp_path):
+        fuels = _make_subscript_range("Fuels", ["liquids", "gases", "solids", "heat"])
+
+        def part(label, cell):
+            return AbstractData(subscripts=([label], []), ast=GetDataStructure(
+                file="data.xlsx", tab="S", time_row_or_col="time", cell=cell))
+
+        elem = AbstractElement(name="Share", components=[
+            part("liquids", "l"), part("solids", "s"), part("gases", "g")])
+        sb = _section_builder_from_elements([elem], subscripts=[fuels],
+                                            path=tmp_path / "m.mdl")
+        sb.build_section()
+        assert "const share_fns = [share_1_fns, share_3_fns, share_2_fns, [_ -> NaN]]" \
+            in sb.lookup_const_decls, sb.lookup_const_decls
+
+
+class TestFlatArrayAuxiliary:
+    """initial population tabbed array[country, blood] = TABBED ARRAY(...)
+    (test-models tabbed_arrays): a flat list of values fills the array row by row."""
+
+    def test_flat_values_fill_rows(self, tmp_path):
+        rows = _make_subscript_range("country", ["c1", "c2"])
+        cols = _make_subscript_range("blood", ["b1", "b2", "b3"])
+        elem = AbstractElement(name="tabbed", components=[
+            AbstractComponent(subscripts=(["country", "blood"], []),
+                              ast=np.arange(1.0, 7.0))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls,
+                                subscripts=[rows, cols], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        # numbers for every element: one array
+        assert ("tabbed = pysd_input(_given, :tabbed, "
+                "pysd_safe(Float64[1.0 2.0 3.0; 4.0 5.0 6.0]))") in content
+
+
+class TestGetTimeValue:
+    """GET TIME VALUE(0, (dim - 20)/3, 0) (test-models get_time_value): the
+    current time plus the offset, as Python PySD."""
+
+    def test_current_time_plus_offset(self):
+        v, *_ = _visitor_with_namespace(["offset"])
+        node = CallStructure(function=ReferenceStructure("GET TIME VALUE"),
+                             arguments=[0, ReferenceStructure("offset"), 0])
+        assert v.visit(node) == "(t + offset)"
+
+    def test_unsupported_combination_warns(self):
+        v, *_ = _visitor_with_namespace()
+        node = CallStructure(function=ReferenceStructure("GET TIME VALUE"),
+                             arguments=[2, 0, 1])
+        with pytest.warns(UserWarning, match="GET TIME VALUE"):
+            assert v.visit(node) == "NaN"
+
+
+class TestVectorFunctions:
+    """VECTOR RANK(revenue[Region, company], 1) in ranks[Region, scompany]
+    (test-models vector_order): ranks along the last subscript."""
+
+    def _visitor(self):
+        v = JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            active_subs={"Region": "_i0", "scompany": "_i1"},
+            subs_elems={"Region": ["r1", "r2"], "company": ["a", "b", "c"],
+                        "scompany": ["s1", "s2", "s3"]},
+            var_dims={"revenue": ["Region", "company"], "order": ["Region", "scompany"]})
+        v.namespace.add_to_namespace("revenue")
+        v.namespace.add_to_namespace("order")
+        return v
+
+    def test_rank_along_the_last_subscript(self):
+        v = self._visitor()
+        node = CallStructure(function=ReferenceStructure("VECTOR RANK"), arguments=[
+            ReferenceStructure("revenue", SubscriptsReferenceStructure(("Region", "company"))), 1])
+        assert v.visit(node) == (
+            "pysd_vector_rank([revenue[_i0, _v] for _v in 1:N_COMPANY], 1.0)[_i1]")
+
+    def test_reorder_builds_both_vectors(self):
+        v = self._visitor()
+        node = CallStructure(function=ReferenceStructure("VECTOR REORDER"), arguments=[
+            ReferenceStructure("revenue", SubscriptsReferenceStructure(("Region", "company"))),
+            ReferenceStructure("order", SubscriptsReferenceStructure(("Region", "scompany")))])
+        assert v.visit(node) == (
+            "pysd_vector_reorder([revenue[_i0, _v] for _v in 1:N_COMPANY], "
+            "[order[_i0, _v] for _v in 1:N_COMPANY])[_i1]")
+
+
+class TestSubscriptedAllocation:
+    """allocation[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch, ptype], 10)
+    (test-models allocate_available): the request is a vector along branch, the
+    priority profiles a branch x profile matrix, and each cell takes its share."""
+
+    def test_allocate_available_along_the_last_dimension(self, tmp_path):
+        branch = _make_subscript_range("branch", ["Boston", "Dayton"])
+        profile = _make_subscript_range("pprofile", ["ptype", "ppriority", "pwidth", "pextra"])
+        demand = AbstractElement(name="demand", components=[
+            AbstractComponent(subscripts=(["branch"], []), ast=np.array([5.0, 7.0]))])
+        priority = AbstractElement(name="priority", components=[
+            AbstractComponent(subscripts=(["branch", "pprofile"], []),
+                              ast=np.array([[1.0, 5.0, 2.0, 0.0], [1.0, 7.0, 2.0, 0.0]]))])
+        ref = lambda name, subs: ReferenceStructure(name, SubscriptsReferenceStructure(subs))
+        allocation = AbstractElement(name="allocation", components=[
+            AbstractComponent(subscripts=(["branch"], []), ast=AllocateAvailableStructure(
+                ref("demand", ("branch",)), ref("priority", ("branch", "ptype")), 10.0))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[demand, priority, allocation] + controls,
+                                subscripts=[branch, profile], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert ("allocation[_i0] = pysd_allocate_available([demand[_v] for _v in 1:N_BRANCH], "
+                "[priority[_v, _p] for _v in 1:N_BRANCH, _p in 1:4], 10.0)[_i0]") in content
+
+
+class TestModuleConstantsNotShadowed:
+    """var2[Dim1, Dim2] = WITH LOOKUP(var1[Dim1, Dim2], …) with var1 a GET DIRECT
+    CONSTANTS array (test-models with_lookup): var1 is read from the module-level
+    constant, not from a local array of zeros."""
+
+    def test_external_constant_is_not_reallocated(self, tmp_path):
+        import shutil, warnings
+        src = Path("tests/test-models/tests/with_lookup")
+        if not src.exists():
+            pytest.skip("with_lookup test model not found")
+        for f in src.iterdir():
+            shutil.copy(f, tmp_path / f.name)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            content = translate_to_julia(tmp_path / "test_with_lookup.mdl").read_text()
+        assert "var1 = pysd_input(_given, :var1, " in content
+        assert "var1 = pysd_safe(fill(NaN" not in content
+
+
+class TestActiveInitialOde:
+    """Stock A = INTEG(1, Value A), Value A = ACTIVE INITIAL(Time, 45)
+    (test-models active_initial): the stock starts at 45."""
+
+    def test_initial_value_while_initialising(self, tmp_path):
+        import shutil, warnings
+        mdl = Path("tests/test-models/tests/active_initial/test_active_initial.mdl")
+        if not mdl.exists():
+            pytest.skip("active_initial test model not found")
+        shutil.copy(mdl, tmp_path / mdl.name)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            content = translate_to_julia(tmp_path / mdl.name).read_text()
+        assert "_active_initial(expr, initial) = _initialising[] ? initial : expr" in content
+        assert "value_a = _active_initial(t, 45.0)" in content
+        init = content[content.index("function initial_state("):]
+        init = init[:init.index("\nend\n")]
+        assert init.index("_initialising[] = true") < init.index("_obs_init = observe(")
+        assert init.index("_obs_init = observe(") < init.index("_initialising[] = false")
+        assert "finally" in init
+
+
+class TestConstantsDefinedInParts:
+    """var4[t2] = GET DIRECT CONSTANTS(…), var4[subdim] = …, var4[t4] = …
+    with subdim: t3, t1 (test-models get_values_order): each definition goes
+    to its elements' positions, whatever order they are written in."""
+
+    def test_parts_are_placed_by_element(self, tmp_path):
+        dim = _make_subscript_range("Dimension", ["t1", "t2", "t3", "t4"])
+        sub = _make_subscript_range("subdim", ["t3", "t1"])
+        gcs = lambda cell: GetConstantsStructure("inputs.xlsx", "Sheet1", cell)
+        elem = AbstractElement(name="var4", components=[
+            AbstractComponent(subscripts=(["t2"], []), ast=gcs("var2t2")),
+            AbstractComponent(subscripts=(["subdim"], []), ast=gcs("var4subdim*")),
+            AbstractComponent(subscripts=(["t4"], []), ast=7.0),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls,
+                                subscripts=[dim, sub], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "_v[[2]] .= pysd_xlsx_read_constant(" in content
+        assert '_v[[3, 1]] .= pysd_xlsx_read_constant(_file("inputs.xlsx"), _sheet("Sheet1"), "var4subdim"; transpose=true)' in content
+        assert "_v[[4]] .= 7.0" in content
+
+
+class TestVectorSelect:
+    """VECTOR SELECT(selection[dim1!], expression[dim2!], -1, 0, 0) (test-models
+    vector_select): both arrays cover dim1 x dim2, as in Python PySD."""
+
+    def test_selection_and_expression_over_different_dimensions(self):
+        v = JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            subs_elems={"dim1": ["a", "b", "c"], "dim2": ["x", "y"]},
+            var_dims={"sel": ["dim1"], "expr": ["dim2"]})
+        v.namespace.add_to_namespace("sel")
+        v.namespace.add_to_namespace("expr")
+        node = CallStructure(function=ReferenceStructure("VECTOR SELECT"), arguments=[
+            ReferenceStructure("sel", SubscriptsReferenceStructure(("dim1!",))),
+            ReferenceStructure("expr", SubscriptsReferenceStructure(("dim2!",))),
+            -1, 0, 0])
+        assert v.visit(node) == (
+            "pysd_vector_select([sel[_ii0] for _ii0 in 1:N_DIM1, _ii1 in 1:N_DIM2], "
+            "[expr[_ii1] for _ii0 in 1:N_DIM1, _ii1 in 1:N_DIM2], -1.0, 0.0, 0.0)")
+    def test_power_chain_is_right_associative(self):
+        """Vensim (like Python's **) reads 30^c^c as 30^(c^c)."""
+        v, *_ = _visitor_with_namespace(["cons"])
+        node = ArithmeticStructure(
+            operators=["^", "^"],
+            arguments=[30, ReferenceStructure("cons"), ReferenceStructure("cons")])
+        assert v.visit(node) == "pysd_power(30.0, pysd_power(cons, cons))"
+
+    def test_power_chain_with_negative_literal_base(self):
+        """-2^3^2 is -(2^(3^2))."""
+        v, *_ = _visitor_with_namespace()
+        node = ArithmeticStructure(operators=["^", "^"], arguments=[-2, 3, 2])
+        assert v.visit(node) == "(-pysd_power(2.0, pysd_power(3.0, 2.0)))"
+
+
+class TestCellBlock:
+    """A top-left cell becomes the block of cells the variable reads (as Python PySD)."""
+
+    def test_1d_reads_a_row(self):
+        assert _cell_block("A1", {"dim1c": ["C", "D", "E"]}, False) == "A1:C1"
+
+    def test_1d_transposed_reads_a_column(self):
+        assert _cell_block("B2", {"d": ["x", "y", "z"]}, True) == "B2:B4"
+
+    def test_2d_reads_rows_by_columns(self):
+        assert _cell_block("C3", {"r": ["a", "b"], "c": ["x", "y", "z"]}, False) == "C3:E4"
+
+    def test_2d_transposed(self):
+        assert _cell_block("C3", {"r": ["a", "b"], "c": ["x", "y", "z"]}, True) == "C3:D5"
+
+    def test_length_one_dimensions_are_ignored(self):
+        assert _cell_block("A1", {"one": ["a"], "d": ["x", "y"]}, False) == "A1:B1"
+
+    def test_columns_past_z(self):
+        assert _cell_block("Y1", {"d": list("abcd")}, False) == "Y1:AB1"
+
+    def test_named_range_and_scalars_unchanged(self):
+        assert _cell_block("my_range", {"d": ["x", "y"]}, False) == "my_range"
+        assert _cell_block("A1", {}, False) == "A1"
+        assert _cell_block("$B$2", {"d": ["x", "y"]}, False) == "B2:C2"
+
+
+class TestSubrangeIndexInParentVariable:
+    """POPULATION[ALL BUT YOUNGEST] = INTEG(aging[PREVIOUS COHORT] - aging[ALL BUT YOUNGEST], …)
+    with aging over the whole AGE range (test-models subscript_mapping_simple):
+    the subrange element must index aging by its position in AGE."""
+
+    def test_stock_over_subrange_reads_parent_variable(self, tmp_path):
+        age = _make_subscript_range("AGE", ["INFANT", "CHILD", "TEEN"])
+        older = _make_subscript_range("ALL BUT YOUNGEST", ["CHILD", "TEEN"])
+        previous = AbstractSubscriptRange(
+            name="PREVIOUS COHORT", subscripts=["INFANT", "CHILD"],
+            mapping=["ALL BUT YOUNGEST"])
+
+        def ref(name, sub):
+            return ReferenceStructure(name, SubscriptsReferenceStructure((sub,)))
+
+        aging = AbstractElement(name="aging", components=[
+            AbstractComponent(subscripts=(["AGE"], []), ast=np.array([300.0, 280.0, 200.0]))])
+        population = AbstractElement(name="POPULATION", components=[
+            AbstractComponent(subscripts=(["INFANT"], []), ast=IntegStructure(
+                flow=ArithmeticStructure(["-"], [10.0, ref("aging", "INFANT")]), initial=1.0)),
+            AbstractComponent(subscripts=(["ALL BUT YOUNGEST"], []), ast=IntegStructure(
+                flow=ArithmeticStructure(["-"], [ref("aging", "PREVIOUS COHORT"),
+                                                 ref("aging", "ALL BUT YOUNGEST")]),
+                initial=1.0)),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 10.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(
+            elements=[aging, population] + controls,
+            subscripts=[age, older, previous], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "(aging[1] - aging[2])" in content      # CHILD: from INFANT, to TEEN
+        assert "(aging[2] - aging[3])" in content      # TEEN: from CHILD, out of TEEN
+
+
+class TestSubrangeLoopIndexInParentVariable:
+    """lower values[lower] = value per layer[lower] with value per layer over Layers
+    (test-models subrange_merge): the loop over `lower` must be shifted into Layers."""
+
+    def _build(self, tmp_path, sub_elems):
+        layers = _make_subscript_range("Layers", ["L1", "L2", "L3", "L4"])
+        sub = _make_subscript_range("sub", sub_elems)
+        values = AbstractElement(name="value per layer", components=[
+            AbstractComponent(subscripts=(["Layers"], []), ast=np.array([1.0, 2.0, 3.0, 4.0]))])
+        target = AbstractElement(name="sub values", components=[
+            AbstractComponent(subscripts=(["sub"], []), ast=ReferenceStructure(
+                "value per layer", SubscriptsReferenceStructure(("sub",))))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(
+            elements=[values, target] + controls,
+            subscripts=[layers, sub], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        return JuliaModelBuilder(model).build_model().read_text()
+
+    def test_contiguous_subrange_is_an_offset(self, tmp_path):
+        content = self._build(tmp_path, ["L2", "L3", "L4"])
+        assert "sub_values[_i0] = value_per_layer[_i0 + 1]" in content
+
+    def test_subrange_at_the_start_needs_no_offset(self, tmp_path):
+        content = self._build(tmp_path, ["L1", "L2", "L3"])
+        assert "sub_values[_i0] = value_per_layer[_i0]" in content
+
+    def test_scattered_subrange_uses_a_position_table(self, tmp_path):
+        content = self._build(tmp_path, ["L1", "L3"])
+        assert "sub_values[_i0] = value_per_layer[(1, 3)[_i0]]" in content
+
+
+class TestSubscriptsAsValues:
+    """A dimension or element used as a value is its position in the main
+    range (the largest range containing it), as in Python PySD: so
+    IF THEN ELSE(dim1 = dim3, 1, 0) compares elements also when dim3 orders
+    them differently (test-models subscript_logicals), and subdim1 values
+    count within dim (subscript_definition)."""
+
+    def _visitor(self, ranges):
+        return JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            active_subs={name: f"_i{k}" for k, name in enumerate(ranges)},
+            subs_elems=dict(ranges))
+
+    def test_reordered_range_is_mapped(self):
+        v = self._visitor({"dim1": ["A", "B", "C"], "dim3": ["A", "C", "B"]})
+        node = LogicStructure(["="], [ReferenceStructure("dim1"), ReferenceStructure("dim3")])
+        assert v.visit(node) == "(_i0 == (1, 3, 2)[_i1])"
+
+    def test_subrange_on_the_left(self):
+        v = self._visitor({"subA": ["B", "A"], "dimA": ["A", "B", "C"]})
+        node = LogicStructure(["<>"], [ReferenceStructure("subA"), ReferenceStructure("dimA")])
+        assert v.visit(node) == "((2, 1)[_i0] != _i1)"
+
+    def test_same_order_is_unchanged(self):
+        v = self._visitor({"dim1": ["A", "B"], "dim2": ["A", "B"]})
+        node = LogicStructure(["="], [ReferenceStructure("dim1"), ReferenceStructure("dim2")])
+        assert v.visit(node) == "(_i0 == _i1)"
+
+    def test_element_label_is_its_main_range_position(self):
+        v = self._visitor({"dim1": ["A", "B", "C"], "dim3": ["A", "C", "B"]})
+        node = LogicStructure(["="], [ReferenceStructure("dim3"), ReferenceStructure("B")])
+        assert v.visit(node) == "((1, 3, 2)[_i1] == 2)"
+
+    def test_contiguous_subrange_is_offset_in_its_main_range(self):
+        v = self._visitor({"subdim1": ["ab1", "ab2"], "dim": ["A", "ab1", "ab2", "B"]})
+        assert v.visit(ReferenceStructure("subdim1")) == "(_i0 + 1)"
+
+
+class TestExpandSubscriptRanges:
+    """dim: A, subdim1, B, subdim2, C (test-models subscript_definition)."""
+
+    def _model(self, tmp_path, ranges):
+        section = _make_section(elements=[], subscripts=ranges, path=tmp_path / "m.mdl")
+        return AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+
+    def _ranges(self, model):
+        return {sr.name: sr.subscripts for sr in model.sections[0].subscripts}
+
+    def test_nested_ranges_are_expanded(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_subscript_range("dim", ["A", "sub1", "B", "sub2", "C"]),
+            _make_subscript_range("sub1", ["x1", "x2"]),
+            _make_subscript_range("sub2", ["y1", "subsub", "y2"]),
+            _make_subscript_range("subsub", ["z1", "z2"]),
+        ])
+        ranges = self._ranges(expand_subscript_ranges(model))
+        assert ranges["dim"] == ["A", "x1", "x2", "B", "y1", "z1", "z2", "y2", "C"]
+        assert ranges["sub2"] == ["y1", "z1", "z2", "y2"]
+        assert ranges["sub1"] == ["x1", "x2"]
+
+    def test_copy_definition_takes_the_elements(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_subscript_range("sub2", ["y1", "y2"]),
+            _make_subscript_range("sub2 copy", ["sub2"]),
+            AbstractSubscriptRange(name="alias", subscripts="sub2", mapping=[]),
+        ])
+        ranges = self._ranges(expand_subscript_ranges(model))
+        assert ranges["sub2 copy"] == ["y1", "y2"]
+        assert ranges["alias"] == "sub2"            # aliases are left to the builder
+
+    def test_builder_sizes_the_expanded_range(self, tmp_path):
+        ranges = [
+            _make_subscript_range("dim", ["A", "sub1", "B"]),
+            _make_subscript_range("sub1", ["x1", "x2"]),
+        ]
+        elem = AbstractElement(name="dim values", components=[
+            AbstractComponent(subscripts=(["dim"], []), ast=ReferenceStructure("dim"))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls, subscripts=ranges, path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "const N_DIM = 4" in content
+
+
+class TestExcept2DCells:
+    """x[dim1, dim2] :EXCEPT: [sub, d1], [sub, d3] = Time; x[sub, d1] = y[sub]
+    (test-models except_multiple): EXCEPT removes single cells, not whole rows,
+    and y[sub] is read with the row index."""
+
+    def test_except_removes_cells_and_subrange_reads_rows(self, tmp_path):
+        dim1 = _make_subscript_range("dim1", ["s1", "s2", "s3"])
+        sub = _make_subscript_range("sub", ["s1", "s2"])
+        dim2 = _make_subscript_range("dim2", ["d1", "d2", "d3"])
+        y = AbstractElement(name="y", components=[
+            AbstractComponent(subscripts=(["dim1"], []), ast=ReferenceStructure("dim1"))])
+        x = AbstractElement(name="x", components=[
+            AbstractComponent(subscripts=(["dim1", "dim2"], [["sub", "d1"], ["sub", "d3"]]),
+                              ast=ReferenceStructure("time")),
+            AbstractComponent(subscripts=(["sub", "d1"], []), ast=ReferenceStructure(
+                "y", SubscriptsReferenceStructure(("sub",)))),
+            AbstractComponent(subscripts=(["sub", "d3"], []), ast=2.0),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[y, x] + controls,
+                                subscripts=[dim1, sub, dim2], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "for _i0 in [1, 2], _i1 in [2]\n        x[_i0, _i1] = t" in content
+        assert "for _i0 in [3], _i1 in 1:N_DIM2\n        x[_i0, _i1] = t" in content
+        assert "for _i0 in [1, 2], _i1 in [1]\n        x[_i0, _i1] = y[_i0]" in content
+
+
+class TestCellBlocks:
+    """Exact rectangular cover of the cells an EXCEPT definition leaves."""
+
+    def test_full_product_is_one_block(self):
+        cells = {(i, j) for i in (1, 2) for j in (1, 2, 3)}
+        assert _cell_blocks(cells) == [([1, 2], [1, 2, 3])]
+
+    def test_single_cells_removed(self):
+        cells = {(i, j) for i in (1, 2, 3) for j in (1, 2, 3)} - {(1, 1), (2, 1)}
+        blocks = _cell_blocks(cells)
+        covered = {(i, j) for rows, cols in blocks for i in rows for j in cols}
+        assert covered == cells
+        assert sorted(blocks) == [([1, 2], [2, 3]), ([3], [1, 2, 3])]
+
+    def test_three_dimensions(self):
+        cells = {(i, j, k) for i in (1, 2) for j in (1, 2) for k in (1, 2)} - {(2, 2, 2)}
+        blocks = _cell_blocks(cells)
+        covered = {c for b in blocks for c in itertools.product(*b)}
+        assert covered == cells
+
+    def test_loop_over_parent_reads_subrange_variable(self):
+        v = JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            active_subs={"SEC ALL": "_i1"},
+            subs_elems={"SEC ALL": ["X", "Y", "W", "Z"], "SEC A": ["X", "Z"]},
+            var_dims={"origin": ["SEC A"]})
+        assert v._index_in_var_dim("_i1", "SEC ALL", ["SEC A"], 0) == "(1, 0, 0, 2)[_i1]"
+
+
+# ===========================================================================
+# ODE layout: params(), model!, initial_state, run_model
+# ===========================================================================
+
+def _translate_mdl(tmp_path, text, name="m.mdl", **kwargs):
+    import warnings
+    from pysd import translate_to_julia
+    path = tmp_path / name
+    path.write_text("{UTF-8}\n" + text + """
+FINAL TIME  = 10
+	~	Month
+	~		|
+
+INITIAL TIME  = 0
+	~	Month
+	~		|
+
+SAVEPER  = 1
+	~	Month
+	~		|
+
+TIME STEP  = 0.5
+	~	Month
+	~		|
+""")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return translate_to_julia(path, **kwargs).read_text()
+
+
+def _block(content, start, end="\nend\n"):
+    """The text of content from start to the first end after it."""
+    text = content[content.index(start):]
+    return text[:text.index(end) + len(end)]
+
+
+class TestOdeLayout:
+    MODEL = """
+rate=
+	0.05
+	~	1/Month
+	~	Growth rate.	|
+
+start=
+	100
+	~
+	~		|
+
+twice start=
+	start * 2
+	~
+	~		|
+
+weights[region]=
+	1, 2, 3
+	~
+	~		|
+
+region:
+	north, south, east
+	~
+	~		|
+
+share[region]=
+	weights[region] / SUM(weights[region!])
+	~
+	~		|
+
+stock= INTEG (
+	inflow,
+		twice start)
+	~
+	~	The stock.	|
+
+inflow=
+	stock * rate * effect(Time)
+	~
+	~		|
+
+effect(
+	[(0,0)-(10,2)],(0,1),(10,2))
+	~
+	~		|
+"""
+
+    def test_params_holds_constants_lookups_and_computed_constants(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL)
+        params = _block(content, "function params(")
+        assert ("function params(; sheets = Dict{String,String}(), "
+                "files = Dict{String,String}(), values...)") in params
+        assert "    rate = pysd_input(_given, :rate, 0.05)" in params
+        assert "    twice_start = pysd_input(_given, :twice_start, (start * 2.0))" in params
+        # a lookup: its interpolation, and the function the equations call
+        assert "    effect_itp = LinearInterpolation(" in params
+        assert "    effect = pysd_input(_given, :effect, (x) -> effect_itp(x))" in params
+        # numbers for every element: one array
+        assert "    weights = pysd_input(_given, :weights, pysd_safe(Float64[1.0, 2.0, 3.0]))" in params
+        assert "weights[3] = 3.0" not in params
+        assert "pysd_check_inputs(_given, p)" in params
+        p_line = next(ln for ln in params.split("\n") if ln.startswith("    p = (; "))
+        for name in ("effect", "rate", "start", "twice_start", "weights", "share"):
+            assert f" {name}," in p_line or f" {name})" in p_line, (name, p_line)
+        # nothing at module level but the dimension sizes
+        assert "const rate" not in content and "const effect_itp" not in content
+
+    def test_model_has_the_dynamic_equations_only(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL)
+        model = _block(content, "function model!(d, s, p, t)")
+        assert "    (; effect, " in model and ") = p" in model
+        assert "    stock = s.stock" in model
+        assert "    inflow = ((stock * rate) * effect(t))" in model
+        assert "rate = " not in model.replace("inflow = ", "")
+        # rates of change by name, with the stock's description
+        assert "    if d !== nothing\n        # The stock.\n        d.stock = inflow" in model
+        assert "    return (; inflow)" in model
+        assert "rhs!(du, u, p, t) = (model!(_named(du), _named(u), " in content
+        assert "const _state_axes = getaxes(ComponentArray(; stock = 0.0))" in content
+
+    def test_observe_reads_params_stocks_and_model(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL)
+        observe = _block(content, "function observe(u, t; p = _params)")
+        # lookups (functions) are not values
+        assert "for (k, v) in pairs(p) if !(v isa Function)" in observe
+        assert "pairs(model!(nothing, s, p, t))" in observe
+
+    def test_initial_state_takes_the_constants_from_p(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL)
+        init = _block(content, "function initial_state(p = _params)")
+        assert "    (; twice_start) = p" in init
+        assert "    s.stock = twice_start" in init
+        assert "observe(" not in init                 # no auxiliary needed
+        assert "\nu0 = initial_state()\n" in content
+        assert content.index("const _params = params()") < content.index("u0 = initial_state()")
+
+    def test_run_model_takes_params(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL)
+        run = _block(content, "function run_model(")
+        assert ("function run_model(; params=_params, u0=nothing, tspan=tspan, dt=0.5, "
+                "solver=Euler(), kwargs...)") in run
+        assert "u0 === nothing && (u0 = initial_state(params))" in run
+        assert ("solve(ODEProblem(rhs!, u0, tspan, _problem_p(params)), solver; "
+                "dt=dt, adaptive=false, kwargs...)") in run
+        assert "_problem_p(p) = isempty(p) ? OrdinaryDiffEq.SciMLBase.NullParameters() : p" in content
+
+    def test_initial_of_a_variable_is_evaluated_at_the_initial_time(self, tmp_path):
+        """INITIAL(x) follows the constants given to params: it is a stock
+        frozen at its value at the initial time, not a number fixed by the
+        translation."""
+        content = _translate_mdl(tmp_path, self.MODEL + """
+initial inflow=
+	INITIAL(inflow)
+	~
+	~		|
+
+initial rate=
+	INITIAL(rate * 10)
+	~
+	~		|
+
+initial number=
+	INITIAL(7)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert re.search(r"(s|next)\.initial_inflow = inflow\n", init)
+        assert re.search(r"(s|next)\.initial_rate = \(rate \* 10\.0\)\n", init)
+        assert "initial_number = pysd_input(_given, :initial_number, 7.0)" in content
+        assert "d.initial_inflow = 0.0" in content
+
+    def test_excel_paths_and_sheets_can_be_replaced(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+scale=
+	GET DIRECT CONSTANTS('inputs.xlsx', 'base', 'B2')
+	~
+	~		|
+
+policy=
+	GET DIRECT LOOKUPS('../data/inputs.xlsx', 'base', '4', 'B5')
+	~
+	~		|
+
+out=
+	policy(Time) * scale
+	~
+	~		|
+""")
+        params = _block(content, "function params(")
+        assert "    _file(f) = pysd_file(@__DIR__, f, _files)" in params
+        assert "    _sheet(s) = get(_sheets, s, s)" in params
+        assert ('scale = pysd_input(_given, :scale, pysd_safe(pysd_xlsx_read_constant('
+                '_file("inputs.xlsx"), _sheet("base"), "B2")))') in params
+        assert 'pysd_xlsx_read_series(_file("../data/inputs.xlsx"), _sheet("base"), "4", "B5")' in params
+        assert "@__DIR__" not in params.replace("pysd_file(@__DIR__", "")
+
+    def test_values_fixed_by_the_translation_are_checked(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL + """
+delay time=
+	2
+	~
+	~		|
+
+order=
+	3
+	~
+	~		|
+
+delayed=
+	DELAY FIXED(inflow, delay time, 0)
+	~
+	~		|
+
+smoothed=
+	SMOOTH N(inflow, 4, 0, order)
+	~
+	~		|
+""")
+        line = next(ln for ln in content.split("\n") if "pysd_check_fixed(" in ln)
+        assert 'delay_time = "the number of stages of DELAY FIXED in delayed"' in line
+        assert 'order = "the order of SMOOTH N in smoothed"' in line
+        assert "rate" not in line
+
+    def test_active_initial_while_the_stocks_start(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+value=
+	ACTIVE INITIAL(stock * 2, 45)
+	~
+	~		|
+
+stock= INTEG (
+	1,
+		value)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)", "\nu0 = ")
+        assert "    _initialising[] = true\n    try\n" in init
+        assert "    finally\n        _initialising[] = false\n    end\nend" in init
+
+    def test_model_without_constants(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+stock= INTEG (
+	1,
+		0)
+	~
+	~		|
+""")
+        assert "    p = (; )" in content
+        assert "prob = ODEProblem(rhs!, u0, tspan, _problem_p(_params))" in content
+
+    def test_controls_changing_during_the_run_use_params(self, tmp_path):
+        import shutil
+        mdl = Path("tests/test-models/tests/control_vars/test_control_vars.mdl")
+        if not mdl.exists():
+            pytest.skip("control_vars test model not found")
+        shutil.copy(mdl, tmp_path / mdl.name)
+        from pysd import translate_to_julia
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            content = translate_to_julia(tmp_path / mdl.name).read_text()
+        run = _block(content, "function run_model(")
+        assert "function run_model(; params=_params, u0=nothing)" in run
+        assert "u = u0 === nothing ? initial_state(params) : copy(u0)" in run
+        assert "c = observe(u, t; p = params)" in run
+        assert "rhs!(du, u, params, t)" in run
+
+
+class TestSumOverSubscriptedData:
+    """SUM(data[dim!]) over a subscripted GET DATA calls the data,
+    data(i, t), instead of indexing an array (of zeros)."""
+
+    def test_sum_calls_the_data(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+region:
+	north, south
+	~
+	~		|
+
+regional[region]=
+	GET DIRECT DATA('inputs.xlsx', 'base', '4', 'B7')
+	~
+	~		|
+
+regional total=
+	SUM(regional[region!])
+	~
+	~		|
+""")
+        assert "regional_total = pysd_sum(regional(_ii0, t) for _ii0 in 1:N_REGION)" in content
+        assert "regional = pysd_safe(fill(NaN" not in content
+
+
+class TestOdeHelpers:
+    def test_split_trailing_comment(self):
+        split = JuliaSectionBuilder._split_trailing_comment
+        assert split("3.0  # [0, 10]") == ("3.0", "  # [0, 10]")
+        assert split('f("a#b", 2)') == ('f("a#b", 2)', "")
+        assert split("let\n  x # c\nend") == ("let\n  x # c\nend", "")
+
+    def test_external_paths(self):
+        paths = JuliaSectionBuilder._external_paths
+        assert (paths('pysd_xlsx_read_constant(joinpath(@__DIR__, "a.xlsx"), "S", "B2")')
+                == 'pysd_xlsx_read_constant(_file("a.xlsx"), _sheet("S"), "B2")')
+        # text files have no sheet
+        assert (paths('pysd_tab_read_series(joinpath(@__DIR__, "d.tab"), "x")')
+                == 'pysd_tab_read_series(_file("d.tab"), "x")')
+
+
+class TestInitialStateCallsLookups:
+    """A stock whose initial value calls a lookup (stock = INTEG(…,
+    table(1995))): the lookup is read from p in initial_state."""
+
+    def test_lookup_in_an_initial_value(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+table(
+	[(0,0)-(10,10)],(0,1),(10,2))
+	~
+	~		|
+
+stock= INTEG (
+	1,
+		table(5))
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert "    (; table) = p" in init
+        assert "    s.stock = table(5.0)" in init
+
+
+class TestObserveReportsDataAndControls:
+    def test_data_and_controls_in_observe(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+region:
+	north, south
+	~
+	~		|
+
+regional[region]=
+	GET DIRECT DATA('inputs.xlsx', 'base', '4', 'B7')
+	~
+	~		|
+
+single=
+	GET DIRECT DATA('inputs.xlsx', 'base', '4', 'B9')
+	~
+	~		|
+
+out=
+	regional[north] + single
+	~
+	~		|
+""")
+        observe = _block(content, "function observe(u, t; p = _params)")
+        assert '    out["regional"] = [p.regional(_i0, t) for _i0 in 1:N_REGION]' in observe
+        assert '    out["single"] = p.single(t)' in observe
+        for name in ("initial_time", "final_time", "time_step", "saveper"):
+            assert f'    out["{name}"] = {name}' in observe
+
+
+class TestOneLineArraysAndExcept:
+    MODEL = """
+sector:
+	s1, s2, s3, s4
+	~
+	~		|
+
+flags[sector] :EXCEPT: [s2]=
+	0 ~~|
+flags[s2]=
+	1
+	~	Dmnl
+	~	Flags by sector.	|
+
+same[sector]=
+	0, 0, 0, 0
+	~
+	~		|
+
+level[sector]= INTEG (
+	1,
+		flags[sector])
+	~
+	~		|
+
+rate[sector] :EXCEPT: [s3]=
+	level[sector] * 2 ~~|
+rate[s3]=
+	level[s3]
+	~
+	~	The rate.	|
+"""
+
+    def test_numbers_for_every_element_are_one_array(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL)
+        params = _block(content, "function params(")
+        assert ("    flags = pysd_input(_given, :flags, pysd_safe(Float64[0.0, 1.0, 0.0, 0.0]))"
+                in params)
+        assert "flags[" not in params
+        assert params.count("# units: Dmnl | Flags by sector.") == 1
+        assert "same = pysd_input(_given, :same, pysd_safe(fill(0.0, " in params
+
+    def test_except_over_the_full_range_is_one_loop(self, tmp_path):
+        content = _translate_mdl(tmp_path, self.MODEL)
+        model = _block(content, "function model!(d, s, p, t)")
+        assert "    for _i0 in [1, 2, 4]\n        rate[_i0] = (level[_i0] * 2.0)\n    end" in model
+        assert "    rate[3] = level[3]" in model
+        assert model.count("# The rate.") == 1
+
+
+class TestCompactInitialValues:
+    def test_one_line_per_stock(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+dim:
+	a, b, c
+	~
+	~		|
+
+other:
+	x, y
+	~
+	~		|
+
+source[dim, other]=
+	1, 2; 3, 4; 5, 6;
+	~
+	~		|
+
+zeros[dim]= INTEG (
+	1,
+		0)
+	~
+	~		|
+
+copy[dim, other]= INTEG (
+	1,
+		source[dim, other])
+	~
+	~		|
+
+swapped[other, dim]= INTEG (
+	1,
+		source[dim, other])
+	~
+	~		|
+
+numbers[a]= INTEG (1, 7) ~~|
+numbers[b]= INTEG (1, 3) ~~|
+numbers[c]= INTEG (1, 5)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert "    s.zeros .= 0.0" in init
+        assert "    s.copy .= [source[i, j] for i in 1:3, j in 1:2]" in init
+        assert "    s.swapped .= [source[j, i] for i in 1:2, j in 1:3]" in init
+        assert "    s.numbers .= [7.0, 3.0, 5.0]" in init
+        assert "    return getdata(s)" in init
+
+    def test_cells_that_do_not_follow_one_formula(self):
+        pattern = JuliaSectionBuilder._u0_pattern
+        assert pattern([(["1"], "a[1]"), (["2"], "b[2]")]) is None
+        assert pattern([(["2"], "a[2]"), (["1"], "a[1]")]) is None       # not in order
+        assert (pattern([(["1"], "f(1) + 1"), (["2"], "f(2) + 1"), (["3"], "f(3) + 1")])
+                == ("each", "f(i) + 1", ["i in 1:3"]))
+        # a model variable called i: other loop names
+        assert pattern([(["1"], "i * a[1]"), (["2"], "i * a[2]")]) == (
+            "each", "i * a[_i0]", ["_i0 in 1:2"])
+        assert pattern([(["1:32"], "1.0")]) == ("same", "1.0", [])
+
+    def test_names_of_the_model_are_kept_apart(self, tmp_path):
+        """A model variable called s: the state is _s."""
+        content = _translate_mdl(tmp_path, """
+s=
+	3
+	~
+	~		|
+
+stock= INTEG (
+	1,
+		s)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert "    _s.stock = s" in init and "return getdata(_s)" in init
+
+    def test_internal_stocks_come_last(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+inflow=
+	2
+	~
+	~		|
+
+delayed=
+	DELAY FIXED(inflow, 1, 0)
+	~
+	~		|
+
+level= INTEG (
+	delayed,
+		5)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert init.index("s.level = 5.0") < init.index("# the translation's own stocks")
+        assert init.index("# the translation's own stocks") < init.index("s._df_pipe_delayed")
+
+
+class TestStateMapHasTheModelsStocks:
+    """The results file holds the model's own stocks, not the internal ones
+    (the stages of a DELAY FIXED), which are not laid out over ranges."""
+
+    def test_internal_stocks_are_not_in_the_state_map(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+dim:
+	a, b
+	~
+	~		|
+
+level[dim]= INTEG (
+	1,
+		0)
+	~
+	~		|
+
+delayed[dim]=
+	DELAY FIXED(level[dim], 2, 0)
+	~
+	~		|
+""")
+        state_map = _block(content, "const _state_map = [", "\n]\n")
+        assert '("level", 1, String["dim"]),' in state_map
+        assert "_df_pipe" not in state_map
+        # the internal stock is still in the state, after level
+        assert "_df_pipe_delayed = zeros(4, N_DIM)" in content
+
+
+class TestReadableLayout:
+    def test_number_cells_fold_into_one_line(self):
+        from pysd.builders.julia.julia_model_builder import _fold_number_cells
+        lines = ["    # units: t", "    x[1] = 0.0", "    x[2] = 0.0", "    x[3] = 0.0",
+                 "    y[3] = 0.0", "    y[5] = 0.0", "    z[1] = 1.0", "    z[2] = 2.5",
+                 "    w[1] = 1.0", "    w[2] = (a * 2.0)"]
+        assert _fold_number_cells(lines) == [
+            "    # units: t", "    x[1:3] .= 0.0", "    y[[3, 5]] .= 0.0",
+            "    z[1:2] .= [1.0, 2.5]", "    w[1] = 1.0", "    w[2] = (a * 2.0)"]
+
+    def test_long_lists_are_wrapped(self):
+        from pysd.builders.julia.julia_model_builder import _wrap_list
+        names = [f"variable_number_{k}" for k in range(12)]
+        lines = _wrap_list("    (; ", names, ") = p")
+        assert len(lines) > 1 and all(len(ln) <= 92 for ln in lines)
+        assert lines[0].startswith("    (; variable_number_0,")
+        assert all(ln.startswith("       variable") for ln in lines[1:])
+        assert lines[-1].endswith("variable_number_11) = p")
+        assert " ".join(ln.strip() for ln in lines) == "(; " + ", ".join(names) + ") = p"
+        assert _wrap_list("    p = (; ", [], ")") == ["    p = (; )"]
+
+    def test_initial_values_settle_or_fail(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+inflow=
+	level * 2
+	~
+	~		|
+
+delayed=
+	DELAY1(inflow, 3)
+	~
+	~		|
+
+level= INTEG (
+	delayed,
+		5)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert "for _ in 1:3\n" in init          # 2 stocks (level, the delay) + 1
+        assert "isequal(next, s) && return getdata(next)" in init
+        assert 'error("the initial values do not settle: they depend on each other in a cycle")' in init
+
+
+class TestTidy:
+    """tidy.jl writes the expressions with only the parentheses they need,
+    the same expressions (Julia's own parser and printer)."""
+
+    def test_extra_parentheses_are_removed(self, tmp_path, monkeypatch):
+        import shutil
+        if shutil.which("julia") is None:
+            pytest.skip("julia not found")
+        from pysd.builders.julia.julia_model_builder import tidy_julia_file
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        path = tmp_path / "m.jl"
+        path.write_text("\n".join([
+            "function model!(d, s, p, t)",
+            "    x = ((a * b) * c)  # units: t",
+            "    y = pysd_ifelse((t < 2015.0), ((a + b) + c), (a - (b - c)))",
+            "    z = ((a / b) * c)",
+            "    m = (((a - b) - c) - (d - e))",
+            "    n = (1.0 - (-2.0))",
+            "    f = pysd_input(_given, :f, (x) -> f_itp(x))",
+            '    w = get(_obs_init, "w#1", 0.0)',
+            "    for _i0 in 1:N_A",
+            "        v[_i0] = ((a[_i0] + 1.0) * 2.0)",
+            "    end",
+            "end",
+        ]) + "\n")
+        assert tidy_julia_file(path)
+        assert path.read_text().split("\n")[:11] == [
+            "function model!(d, s, p, t)",
+            "    x = a * b * c  # units: t",
+            "    y = pysd_ifelse(t < 2015.0, a + b + c, a - (b - c))",
+            "    z = a / b * c",
+            "    m = a - b - c - (d - e)",
+            "    n = 1.0 - (-2.0)",
+            "    f = pysd_input(_given, :f, (x) -> f_itp(x))",     # kept as it is
+            '    w = get(_obs_init, "w#1", 0.0)',
+            "    for _i0 in 1:N_A",
+            "        v[_i0] = (a[_i0] + 1.0) * 2.0",
+            "    end",
+        ]
+
+    def test_generators_without_extra_parentheses(self, tmp_path, monkeypatch):
+        import shutil
+        if shutil.which("julia") is None:
+            pytest.skip("julia not found")
+        from pysd.builders.julia.julia_model_builder import tidy_julia_file
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        path = tmp_path / "m.jl"
+        path.write_text("\n".join([
+            "    a = pysd_sum((x[_ii0, _ii1] * 2.0) for _ii1 in 1:N_B, _ii0 in 1:N_A)",
+            "    b = f((y for y in 1:3), 2)",
+            "    c = g(x for x in y if x > 0)",
+        ]) + "\n")
+        assert tidy_julia_file(path)
+        assert path.read_text().split("\n")[:3] == [
+            "    a = pysd_sum(x[_ii0, _ii1] * 2.0 for _ii1 in 1:N_B, _ii0 in 1:N_A)",
+            "    b = f((y for y in 1:3), 2)",
+            "    c = g(x for x in y if x > 0)",          # filters: kept as they are
+        ]
+
+    def test_off_without_julia_or_when_asked(self, tmp_path, monkeypatch):
+        from pysd.builders.julia.julia_model_builder import tidy_julia_file
+        path = tmp_path / "m.jl"
+        path.write_text("x = ((a * b) * c)\n")
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "0")
+        assert not tidy_julia_file(path)
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        monkeypatch.setenv("PATH", "")
+        with pytest.warns(UserWarning, match="julia not found"):
+            assert not tidy_julia_file(path)
+        assert path.read_text() == "x = ((a * b) * c)\n"
+
+
+# ===========================================================================
+# Edge cases of the ODE layout and the helpers of this branch
+# ===========================================================================
+
+class TestEdgeCases:
+    """The less common paths: errors, unusual layouts and fallbacks."""
+
+    @staticmethod
+    def _sb_with_ranges():
+        from types import SimpleNamespace
+        sb = _section_builder_from_elements([])
+        sb._subs_elems = {"dim": ["a", "b", "c"], "sub": ["b", "c"], "other": ["x", "y"]}
+        sb._elem_to_range = {"a": "dim", "b": "dim", "c": "dim", "x": "other", "y": "other"}
+        part = lambda *subs: SimpleNamespace(subscripts=(list(subs), []))
+        return sb, part
+
+    # ---- expressions -------------------------------------------------------
+
+    def test_power_of_a_negative_number_in_a_chain(self):
+        v, *_ = _visitor_with_namespace(["a"])
+        node = ArithmeticStructure(operators=["^", "+"], arguments=(-2, 2, 1))
+        assert v.visit(node) == "((-pysd_power(2.0, 2.0)) + 1.0)"
+        node = ArithmeticStructure(operators=["^", "*"], arguments=(ReferenceStructure("a"), 2, 3))
+        assert v.visit(node) == "(pysd_power(a, 2.0) * 3.0)"
+
+    def test_range_name_through_an_alias(self):
+        v, *_ = _visitor_with_namespace([])
+        v.subs_elems = {"dim": ["a", "b"], "dim1": ["a", "b"]}
+        v.active_subs = {"dim": "_i0"}
+        v._clean_active_subs = {"dim": "_i0"}
+        v.sub_aliases = {"dim1": "dim"}
+        assert v.visit(ReferenceStructure("dim1")) == "_i0"
+
+    def test_position_of_a_subrange_element_in_its_main_range(self):
+        v, *_ = _visitor_with_namespace([])
+        v.subs_elems = {"dim": ["a", "b", "c"], "sub": ["b", "c"]}
+        v._elem_index = {"a": {"dim": 1}, "b": {"dim": 2, "sub": 1}, "c": {"dim": 3, "sub": 2}}
+        assert v._main_position("sub", "1") == "2"       # b, second in dim
+        assert v._main_position("sub", "9") == "9"       # out of the range: as it is
+
+    # ---- builder helpers -----------------------------------------------------
+
+    def test_outer_for_clause_without_a_loop(self):
+        from pysd.builders.julia.julia_model_builder import _outer_for_clause
+        assert _outer_for_clause("[x[1] ~ 2.0]") == ""
+
+    def test_values_at_the_initial_time_that_cannot_be_computed(self):
+        sb = _section_builder_from_elements([])
+        unknown = CallStructure(ReferenceStructure("exp"), (ReferenceStructure("nothing here"),))
+        assert sb._eval_ast_at_t0(unknown) is None
+        negative = CallStructure(ReferenceStructure("ln"), (-1.0,))
+        assert sb._eval_ast_at_t0(negative) is None
+
+    def test_data_parts_need_one_range(self):
+        sb, part = self._sb_with_ranges()
+        # elements of the variable's range, in any order: by position
+        sb._var_dims["x"] = ["dim"]
+        assert sb._place_data_parts_1d("x", [part("c"), part("a")], ["fc", "fa"]) == \
+            ["fa", "[_ -> NaN]", "fc"]
+        # elements of two ranges: not one range
+        assert sb._place_data_parts_1d("z", [part("a"), part("x")], ["fa", "fx"]) is None
+
+    def test_keyed_dispatch_shapes(self):
+        sb, part = self._sb_with_ranges()
+        # one element of dim fixed, a range of other: keyed by the dim element
+        assert sb._keyed_dispatch("v", [part("a", "other"), part("b", "other")]) == \
+            ([(1,), (2,)], 2, 1)
+        # an element that is not of the variable's range
+        sb._var_dims["w"] = ["dim", "other"]
+        assert sb._keyed_dispatch("w", [part("a", "other"), part("x", "other")]) is None
+        # the same element twice
+        assert sb._keyed_dispatch("v", [part("a", "other"), part("a", "other")]) is None
+
+    def test_constants_in_parts_need_two_parts(self):
+        elem = _make_element("one part", 1.0)
+        sb = _section_builder_from_elements([])
+        assert sb._placed_constants_1d(elem) is None
+
+    def test_literal_arrays_that_do_not_cover_the_variable(self):
+        sb = _section_builder_from_elements([])
+        sb.subs_const_decls = ["const N_DIM = 3"]
+        eqs = [("x", set(), "", ["x[1] = 1.0"], None), ("x", set(), "", ["x[2] = 2.0"], None),
+               ("y", set(), "", ["y[1] = 1.0"], None), ("y", set(), "", ["y[4] = 2.0"], None)]
+        # x covers 2 of 3 elements; y has an element out of its size
+        assert sb._literal_arrays(eqs, set(), {"x": ["N_DIM"], "y": ["2"]}) == {}
+
+    def test_array_constant_from_a_list(self):
+        sb = _section_builder_from_elements([])
+        assert sb._ode_array_constant("x[1:N_A]", "[1.0, 2.0]") == "const x = Float64[1.0, 2.0]"
+
+    def test_topological_order_keeps_the_parts_of_a_variable(self):
+        sb = _section_builder_from_elements([])
+        eqs = ["x[1] ~ x[2] + 1.0", "x[2] ~ 5.0", "y ~ x[1]"]
+        order = sb._topo_sort_equations(eqs, {})
+        assert order.index("x[1] ~ x[2] + 1.0") < order.index("x[2] ~ 5.0") < order.index("y ~ x[1]")
+
+    # ---- initial values --------------------------------------------------
+
+    def test_initial_values_of_a_flat_stock_with_two_indices(self):
+        sb = _section_builder_from_elements([])
+        sb._ode_stock_ndims = {"x": 1, "y": 1, "z": 2}
+        cells = [(["1", "1"], "a[1, 1]"), (["2", "1"], "a[2, 1]"),
+                 (["1", "2"], "a[1, 2]"), (["2", "2"], "a[2, 2]")]
+        # a 2-D formula for a stock laid out flat: vec of the comprehension
+        assert sb._u0_stock_lines("s", "x", cells) == \
+            ["s.x .= vec([a[i, j] for i in 1:2, j in 1:2])"]
+        # cells that follow no formula, some over several cells: by position
+        cells = [(["1:3"], "u"), (["4"], "v"), (["5"], "w")]
+        assert sb._u0_stock_lines("s", "y", cells) == \
+            ["s.y[1:3] .= u", "s.y[4] = v", "s.y[5] = w"]
+        cells = [(["1:3", "1"], "u"), (["1:3", "2"], "q[7]")]
+        assert sb._u0_stock_lines("s", "z", cells) == \
+            ["s.z[1:3, 1] .= u", "s.z[1:3, 2] .= q[7]"]
+
+    def test_initial_values_over_several_cells_of_a_flat_stock(self):
+        sb = _section_builder_from_elements([])
+        sb._ode_stock_ndims = {"x": 1}
+        # two indices on a stock laid out flat, cells that follow no formula
+        cells = [(["1:2", "1"], "u"), (["1:2", "2"], "v[9]")]
+        assert sb._u0_stock_lines("s", "x", cells) == ["s.x[1:2] .= u", "s.x[3:4] .= v[9]"]
+
+    def test_loop_over_a_list_of_names(self):
+        sb = _section_builder_from_elements([])
+        block = sb._equations_block(["[x[_i0] ~ 1.0 for _i0 in [a, b]]..."])
+        assert "x = pysd_safe(fill(NaN, 2))" in block
+
+    def test_initial_value_patterns_that_do_not_apply(self):
+        pattern = JuliaSectionBuilder._u0_pattern
+        assert pattern([(["1:3"], "u"), (["4"], "v")]) is None      # a range and an element
+        assert pattern([(["a"], "u"), (["b"], "v")]) is None        # not integer indices
+        # the integer changes, but not as an index
+        assert pattern([(["1"], "f(7)"), (["2"], "f(9)")]) is None
+
+    def test_mtk_pipeline_initial_value_with_a_constant(self):
+        """MTK: all stages of a pipeline cell start at its initial value,
+        with the parameters written as their values."""
+        sb = _section_builder_from_elements([], backend="mtk")
+        sb.param_decls = ["@parameters start = 4.0"]
+        sb.u0_entries = ["_df_pipe_x[1:2, 1] => start * 2", "level => 1.0"]
+        assert sb._u0_block_mtk() == (
+            "u0 = [\n    _df_pipe_x[1, 1] => 4.0 * 2,\n    _df_pipe_x[2, 1] => 4.0 * 2,\n"
+            "    level => 1.0,\n]\n")
+
+    def test_tidy_that_fails(self, tmp_path, monkeypatch):
+        import subprocess
+        from pysd.builders.julia import julia_model_builder as jmb
+        monkeypatch.setenv("PYSD_JULIA_TIDY", "1")
+        monkeypatch.setattr(jmb, "warn", jmb.warn)
+        monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/julia")
+
+        def fail(*args, **kwargs):
+            raise subprocess.CalledProcessError(1, args[0])
+        monkeypatch.setattr(subprocess, "run", fail)
+        path = tmp_path / "m.jl"
+        path.write_text("x = ((a * b) * c)\n")
+        with pytest.warns(UserWarning, match="keeps its extra parentheses"):
+            assert not jmb.tidy_julia_file(path)
+        assert path.read_text() == "x = ((a * b) * c)\n"
+
+    def test_allocate_available_profiles(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+branch:
+	b1, b2
+	~
+	~		|
+
+ptype:
+	pprofile, ppriority, pwidth, pextra
+	~
+	~		|
+
+request[branch]=
+	3, 4
+	~
+	~		|
+
+pp[branch, ptype]=
+	1, 1, 1, 0; 1, 2, 1, 0;
+	~
+	~		|
+
+flat profile=
+	1
+	~
+	~		|
+
+avail=
+	5
+	~
+	~		|
+
+by profile[branch]=
+	ALLOCATE AVAILABLE(request[branch], pp[branch, pprofile], avail)
+	~
+	~		|
+
+whole range[branch]=
+	ALLOCATE AVAILABLE(request[branch], pp[branch, ptype], avail)
+	~
+	~		|
+
+one profile[branch]=
+	ALLOCATE AVAILABLE(request[branch] * 1, flat profile, avail)
+	~
+	~		|
+""")
+        params = _block(content, "function params(")    # constant inputs: in params
+        # the profile's dimension is the range of its first element
+        assert "for _v in 1:N_BRANCH, _p in 1:4]" in params
+        # or the range itself
+        assert params.count("for _v in 1:N_BRANCH, _p in 1:4]") == 2
+        # a profile without subscripts, a request that is an expression
+        assert ("pysd_allocate_available([(request[_v] * 1.0) for _v in 1:N_BRANCH], "
+                "flat_profile, avail)") in params
+
+
+class TestMappedSubrangeOfALargerRange:
+    """x[sectors, sectors1] = m[sec_map_1, secb_map_0], where sec_map_0 is
+    (sec3-sec4) -> sectors, a subrange of m's own range: the block of m at
+    the subranges' positions."""
+
+    def test_block_of_a_larger_matrix(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+sectors:
+	s1, s2
+	~
+	~		|
+
+sectors1:
+	t1, t2
+	~
+	~		|
+
+all sec:
+	sec1, sec2, sec3, sec4
+	~
+	~		|
+
+all secb:
+	secb1, secb2, secb3, secb4
+	~
+	~		|
+
+sec_map_1:
+	(sec1-sec2) -> sectors
+	~
+	~		|
+
+secb_map_0:
+	(secb3-secb4) -> sectors1
+	~
+	~		|
+
+m[all sec, all secb]=
+	1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12; 13, 14, 15, 16;
+	~
+	~		|
+
+block[sectors, sectors1]=
+	m[sec_map_1, secb_map_0] * 1
+	~
+	~		|
+""")
+        assert "m[_i0, _i1 + 2]" in content, content
+
+
+class TestCellLoops:
+    """Consecutive cells that follow one formula of their index: a loop."""
+
+    def test_runs_become_loops(self):
+        from pysd.builders.julia.julia_model_builder import _fold_cell_loops
+        lines = ["        d.x[1] = f[1] - f[2]", "        d.x[2] = f[2] - f[3]",
+                 "        d.x[3] = f[3] - f[4]", "        d.x[4] = f[4]",
+                 "    y[2] = a * 2.0", "    y[3] = a * 2.0",          # two cells: kept
+                 "    z[1] = g(1, t)", "    z[2] = g(2, t)", "    z[3] = g(5, t)"]  # no formula
+        assert _fold_cell_loops(lines) == [
+            "        for i in 1:3", "        d.x[i] = f[i] - f[i + 1]".replace("        d", "            d"),
+            "        end", "        d.x[4] = f[4]",
+            "    y[2] = a * 2.0", "    y[3] = a * 2.0",
+            "    z[1] = g(1, t)", "    z[2] = g(2, t)", "    z[3] = g(5, t)"]
+
+    def test_loop_variable_does_not_hide_a_model_variable(self):
+        from pysd.builders.julia.julia_model_builder import _fold_cell_loops
+        lines = ["    x[2] = i * w[1]", "    x[3] = i * w[2]", "    x[4] = i * w[3]"]
+        assert _fold_cell_loops(lines) == [
+            "    for _i in 2:4", "        x[_i] = i * w[_i - 1]", "    end"]

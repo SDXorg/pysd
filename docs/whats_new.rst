@@ -41,8 +41,33 @@ New Features
 
   (`@rogersamso <https://github.com/rogersamso>`_)
 
+- Julia builder: ``GET XLS`` / ``GET DIRECT`` functions read ``.xls`` files
+  and delimited text files (``.csv``, ``.tab``, ...), as the Python builder
+  does, and subscripted variables read one row or column per element in
+  row/column mode; generated models require PySD.jl 0.2.2 (:issue:`501`).
+- Julia builder (ODE backend): scenarios.  ``params(name = value, ...)``
+  gives any constant, lookup or data series of a generated model another
+  value, and everything computed from them (other constants, the initial
+  values of the stocks) follows; ``sheets`` and ``files`` read the Excel
+  inputs from other sheets or files.  Run with
+  ``run_model(params = params(...))``.  Generated models require PySD.jl
+  0.2.7.
+- Julia builder (ODE backend): when Julia is installed, the generated
+  expressions have only the parentheses they need (printed again by Julia's
+  own parser and printer, ``tidy.jl``; ``PYSD_JULIA_TIDY=0`` skips it).
+- Julia builder (ODE backend): three or more consecutive elements of a
+  variable with the same formula are written as one loop
+  (``for i in 1:3 ... x[i] = y[i] - y[i + 1] ... end``) instead of one line each.
+
 Breaking changes
 ~~~~~~~~~~~~~~~~
+- Julia builder (ODE backend): new layout of the generated model.  The
+  constants, lookups and data are computed once in ``params()``; the stocks
+  are named and shaped (ComponentArrays.jl, a new required package); the
+  equations are written once, in ``model!(d, s, p, t)``, which ``rhs!`` and
+  ``observe`` use; ``initial_state(p)`` gives the initial values.
+  ``run_model``, ``observe(u, t)``, ``u0`` and ``save_results`` keep working
+  as before.
 
 Deprecations
 ~~~~~~~~~~~~
@@ -50,15 +75,127 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Fix setting parmas with dimensions (:issue:`484`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- No deprecation warnings with pandas 3.1: results are indexed by time
+  without ``inplace``, and spreadsheets are read with an explicit engine
+  (openpyxl for ``.xlsx``/``.xlsm``, as before; calamine for ``.xls`` when
+  available, as xlrd is deprecated).
+- Julia builder: ``SUM`` (and ``PROD``, ``VMIN``, ``VMAX``) over a
+  subscripted ``GET DATA`` or ``GET LOOKUPS`` variable reads the data
+  (``x(i, t)``) instead of an array of zeros.
+- Julia builder: the results have Python PySD's last digits (PySD.jl
+  0.2.7).  ``SUM`` adds the elements in the order numpy does
+  (``pysd_sum``: pairwise, the last subscript varying fastest;
+  ``pysd_sum_seq`` where numpy adds one after the other), ``INVERT MATRIX``
+  uses the same LAPACK routine as ``numpy.linalg.inv``, and ``EXP``, ``LN``,
+  ``SIN``, ..., and ``^`` call the C maths library, as numpy (``pysd_exp``,
+  ``pysd_sin``...).  Before, values equal up to rounding (``x < 0`` with
+  ``x`` about ``1e-16``) could take the other branch of an ``IF THEN ELSE``
+  than in Python.  NaN elements count as 0 in ``SUM``, as in Python.
+- Julia builder (ODE backend): the elements a model does not define are
+  NaN, as in Python PySD; before, they were 0.
+- Julia builder: a lookup or data series of one point has the same value
+  everywhere, as in Python PySD (PySD.jl 0.2.5); before, the model failed
+  to load.
+- Julia builder: ``LN``, ``SQRT``, ``ARCSIN``, ``ARCCOS`` and ``LOG`` give
+  NaN out of their domain, as in Python PySD (PySD.jl 0.2.6); before, a
+  branch of ``IF THEN ELSE`` that is not taken could stop the run with a
+  ``DomainError``.
+- Julia builder: a subrange of a variable's own range mapped to another
+  range (``sec_map_0: (sec15-sec28) -> sectors``, read as
+  ``m[sec_map_1, secb_map_0]``) reads the subrange's elements at their
+  positions; before, the first elements of the range were read.
+- Julia builder: a named range local to several sheets of a workbook (a
+  scenario sheet and its older copy) is read from the requested sheet
+  (PySD.jl 0.2.6).
+- Julia builder (ODE backend): the results file (``save_results``) holds
+  the model's stocks only; the internal stocks of ``DELAY FIXED``,
+  ``SAMPLE IF TRUE`` and others were saved as their first cell.
+- Julia builder: fix multi-dimensional (2D/3D) subscripted variables, which ran
+  with wrong values or failed to run. Multi-dimensional stocks are now laid out
+  in Julia's column-major order, elements defined one subscript element at a time
+  work in any dimension (constants and stocks), aggregation references such as
+  ``io_matrix[sector1, sector!]`` keep their subscript order, and ``save_results``
+  writes one NetCDF dimension per subscript range (``(time, dim_1, ..., dim_n)``,
+  with element labels), which ``nc_data_files`` reads back. The numerical tests
+  now compare 2D/3D test models with their Vensim output (:issue:`494`).
+- Julia builder: delays as in the Python builder.  DELAY FIXED takes its
+  number of stages from the delay time at the initial time (also when it is
+  an expression) and uses the exact pipeline with both backends; DELAY N
+  follows a changing delay time stage by stage; DELAY1/3/N lower their order
+  when order × TIME STEP exceeds the delay time.  With the ODE backend,
+  initial values that depend on stocks no longer start from zero
+  (:issue:`511`).
+- Julia builder (ODE backend): control variables that depend on ``Time`` or
+  on model variables (e.g. ``FINAL TIME = IF THEN ELSE(x > 50, Time, 100)``)
+  are evaluated at every step, as in the Python builder; initial values that
+  use ``Time`` or call functions with the same name as a variable no longer
+  fail (:issue:`520`).
+- Julia builder: subscripted ``SMOOTH`` over several dimensions, subscripted
+  ``TREND`` and ``FORECAST`` (with the Python builder's formulas), subscripted
+  ``DELAY FIXED`` inputs, and array constants and ``TABBED ARRAY`` values in
+  the ODE backend now generate valid Julia (:issue:`521`).
+- Julia builder: ``ALLOCATE AVAILABLE`` and ``ALLOCATE BY PRIORITY`` on
+  subscripted variables, ``VECTOR SORT ORDER``, ``VECTOR RANK`` and ``VECTOR
+  REORDER`` (along the last subscript), ``GET TIME VALUE`` of the current
+  time, and data defined element by element over several dimensions, as in
+  the Python builder.  With the ODE backend, ``ACTIVE INITIAL`` gives its
+  initial value while the initial values are computed, constants defined
+  element by element are placed at their elements whatever the order of the
+  definitions, and ``GET DIRECT CONSTANTS`` arrays are no longer hidden by
+  local arrays of zeros (:issue:`522`).
+- Julia builder: ``VECTOR SELECT`` with Vensim's arguments and numerical
+  actions, also when the selection and the expression run over different
+  dimensions, and ``:RAW:`` DATA (a value at the data times only), with
+  PySD.jl 0.2.3 (:issue:`522`).
+- Julia builder: Vensim macros are expanded in place before building, so
+  macros with stocks give the right results and the MTK backend can run
+  models with macros; the companion function files are gone
+  (:issue:`510`).
+- Julia builder: chains of powers are right-associative as in Vensim
+  (``a^b^c = a^(b^c)``), and ``MODULO`` keeps the sign of its first argument
+  as in Vensim and the Python builder (Julia's ``mod`` did not)
+  (:issue:`516`).
+- Julia builder: subranges and subscript mapping as in the Python builder.
+  A variable defined over a subrange reads variables over the full range at
+  the right elements; ranges defined with other ranges are expanded;
+  subscripts used as values (and compared) are positions in their main
+  range; ``EXCEPT`` removes single cells, also for stocks; ``GET DIRECT
+  CONSTANTS`` with a top-left cell reads the whole block (:issue:`518`).
+- Julia builder: fixes found by running a large model.  A
+  variable defined element by element is used only after all its elements
+  are computed; ``SUM`` (and ``PROD``, ``VMIN``, ``VMAX``) over a subrange
+  reads the subrange's elements of a variable defined over the full range;
+  a variable defined in parts over different subranges (``x[A1, B] = 0``,
+  ``x[A2, B] = ...``) gets all its parts, also when some parts are
+  ``GET CONSTANTS`` and others equations; data defined one element at a
+  time is read at each element's position, whatever the order of the
+  definitions; with PySD.jl 0.2.4, ``XIDZ`` and
+  ``ZIDZ`` treat denominators below 1e-6 as zero (also in the MTK backend),
+  and Excel numbers stored as text and square blocks of series are read as
+  in the Python builder.
 
 Documentation
 ~~~~~~~~~~~~~
 
 Performance
 ~~~~~~~~~~~
+- Julia builder (ODE backend): constants are computed once instead of at
+  every time step, and each equation is compiled once.  On a large model
+  (1,800 variables) a run takes about 2 s instead of about 56 s once
+  compiled, and loading and compiling is faster too.
+- Julia builder: the stages of a ``DELAY FIXED`` are one array stock and one
+  loop in the generated code, instead of one variable and one equation per
+  stage.  Models with long fixed delays generate far less code (a large model
+  with 1,760-stage delays went from about 400,000 to 12,000 lines), which
+  Julia can compile.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Julia builder: reference tests for every test model of the Python integration
+  pathways, with both Julia backends (ODE and MTK), compared with the reference
+  outputs; known failures are tracked in :issue:`499`, :issue:`500`, :issue:`501`
+  and :issue:`502`.  Generated models run and save only when executed as a
+  script, and now require PySD.jl 0.2.0.
 
 v3.14.3 (2025/03/23)
 --------------------

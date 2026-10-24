@@ -235,9 +235,11 @@ def translate_to_julia(
         ``<model>_data.json`` file and reads it at startup via ``JSON3.jl``.
 
     backend: str (optional)
-        Julia ODE backend.  ``"ode"`` (default) emits a plain ``rhs!``
-        function solved by ``OrdinaryDiffEq.jl``.  ``"mtk"`` emits a
-        ``ModelingToolkit.jl`` ``ODESystem``.
+        Julia ODE backend.  ``"ode"`` (default) emits ``params()`` (the
+        constants, lookups and data, computed once and changeable between
+        runs), ``initial_state`` and one ``model!(d, s, p, t)`` over the
+        stocks by name (ComponentArrays), solved by ``OrdinaryDiffEq.jl``.
+        ``"mtk"`` emits a ``ModelingToolkit.jl`` ``ODESystem``.
 
     subview_sep: list (optional)
         Passed to ``parse_sketch`` when ``split_views=True`` (Vensim only).
@@ -279,7 +281,8 @@ def translate_to_julia(
             "Supported formats: .mdl, .xmile, .stmx"
         )
 
-    return JuliaModelBuilder(abs_model, data_format=data_format, backend=backend).build_model()
+    return JuliaModelBuilder(abs_model, data_format=data_format,
+                             backend=backend).build_model()
 
 
 def load(py_model_file, data_files=None, data_files_encoding=None,

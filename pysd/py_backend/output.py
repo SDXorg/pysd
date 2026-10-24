@@ -309,7 +309,7 @@ class DataFrameHandler(OutputHandlerInterface):
         """
         # create the dataframe
         df = pd.DataFrame.from_dict(self.ds)
-        df.set_index('time', inplace=True)
+        df = df.set_index('time')
 
         # enforce flattening if df is to be saved to csv or tab file
         flatten = True if self.out_file else kwargs.get("flatten", None)

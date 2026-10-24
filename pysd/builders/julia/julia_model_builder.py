@@ -9,7 +9,9 @@ Entry point::
 """
 from __future__ import annotations
 
+import dataclasses
 import itertools
+import math
 import re
 import textwrap
 from pathlib import Path
@@ -57,7 +59,91 @@ from .julia_expressions_builder import (
     format_number,
     lookup_interpolation_code,
 )
+from .macro_inliner import inline_macros
 from .namespace import JuliaNamespaceManager
+
+
+_CELL_REF_RE = re.compile(r"^\$?([A-Za-z]{1,3})\$?([0-9]+)$")
+
+
+def _cell_block(cell: str, coords: dict, transpose: bool) -> str:
+    """Turn a top-left cell into the block of cells a variable reads.
+
+    As Python PySD (``ExtConstant``): the shape is the variable's
+    dimensions without the ones of length 1, completed to 2D with a 1 on
+    the left (so a 1D variable reads one row), and reversed when the
+    reference is transposed (``*``).  Named ranges and single-element
+    variables are returned unchanged.
+    """
+    m = _CELL_REF_RE.match(cell)
+    sizes = [len(v) for v in coords.values() if len(v) > 1]
+    if not m or not sizes or len(sizes) > 2:
+        return cell
+    shape = [1] * (2 - len(sizes)) + sizes
+    if transpose:
+        shape.reverse()
+    col = 0
+    for ch in m.group(1).upper():
+        col = col * 26 + ord(ch) - ord("A") + 1
+    row = int(m.group(2))
+    last_col, last_row = col + shape[1] - 1, row + shape[0] - 1
+    letters = ""
+    while last_col:
+        last_col, rem = divmod(last_col - 1, 26)
+        letters = chr(ord("A") + rem) + letters
+    return f"{m.group(1).upper()}{row}:{letters}{last_row}"
+
+
+
+def _cell_blocks(cells) -> List[Tuple[List[int], ...]]:
+    """Split a set of index tuples into rectangular blocks (one list of
+    indices per dimension) that cover exactly those cells.
+
+    Values of the first index with the same remaining cells share a block;
+    the remaining cells are split the same way, dimension by dimension.
+    """
+    cells = set(cells)
+    if not cells:
+        return []
+    if len(next(iter(cells))) == 1:
+        return [(sorted(c[0] for c in cells),)]
+    rest: Dict[int, frozenset] = {}
+    for c in cells:
+        rest.setdefault(c[0], set()).add(c[1:])
+    groups: Dict[frozenset, List[int]] = {}
+    for i, sub in sorted(rest.items()):
+        groups.setdefault(frozenset(sub), []).append(i)
+    return [
+        (firsts, *block)
+        for sub, firsts in groups.items()
+        for block in _cell_blocks(sub)
+    ]
+
+
+def _outer_for_clause(eq: str) -> str:
+    """Return the for-clause of the comprehension equation ``[lhs ~ rhs for ...]...``.
+
+    Only the outer clause (at bracket depth 0) counts: the right-hand side may
+    contain aggregations with their own loops, e.g. ``sum(w[_ii0] for _ii0 in 1:N_B)``.
+    Returns "" when there is none.
+    """
+    inner = eq.strip().rstrip(",")
+    inner = inner[:-3] if inner.endswith("...") else inner
+    inner = inner[1:-1] if inner.startswith("[") and inner.endswith("]") else inner
+    depth = 0
+    for i in range(len(inner) - 1, 3, -1):
+        c = inner[i]
+        if c in ")]":
+            depth += 1
+        elif c in "([":
+            depth -= 1
+        elif depth == 0 and inner[i:i + 4] == "for " and inner[i - 1] == " ":
+            return inner[i + 4:]
+    return ""
+
+
+#: PySD.jl version the generated models are written for (checked on load).
+PYSD_JL_VERSION = "0.2.7"
 
 # Control variable identifiers produced by Vensim
 _CONTROL_IDENTIFIERS = frozenset(
@@ -84,6 +170,64 @@ _UNSUPPORTED_STRUCTURES = ()
 # ---------------------------------------------------------------------------
 # Top-level builder
 # ---------------------------------------------------------------------------
+
+
+#: Functions _eval_ast_at_t0 can evaluate on numbers (Vensim names, lower case)
+_T0_MATH = {
+    "sin": math.sin, "cos": math.cos, "tan": math.tan, "exp": math.exp,
+    "ln": math.log, "log": math.log10, "sqrt": math.sqrt, "abs": abs,
+    "integer": math.trunc, "max": max, "min": min,
+}
+
+
+def _non_negative_flow(ast: IntegStructure, flow_expr: str, stock_ref: str) -> str:
+    """Flow of a stock, limited so a non-negative stock (XMILE) stays >= 0.
+
+    PySD's NonNegativeInteg sets the stock to max(stock + dt * flow, 0) after
+    each Euler step; with a fixed step that is the same as limiting the flow
+    to -stock / dt.
+    """
+    if getattr(ast, "non_negative", False):
+        return f"max({flow_expr}, -{stock_ref} / time_step)"
+    return flow_expr
+
+
+def expand_subscript_ranges(model: AbstractModel) -> AbstractModel:
+    """Expand subscript ranges defined with other ranges.
+
+    Vensim allows ``dim: A, subdim1, B`` where ``subdim1`` is itself a range;
+    the parser keeps the range name.  As Python PySD, the range is the list
+    of elements with each nested range replaced by its elements (recursively),
+    so ``dim`` has 2 + len(subdim1) elements.  Copy definitions such as
+    ``subdim2 copy: subdim2`` become the elements of the copied range.
+    """
+    import dataclasses
+
+    lists = {
+        sr.name: sr.subscripts
+        for section in model.sections for sr in section.subscripts
+        if isinstance(sr.subscripts, list)
+    }
+
+    def expand(name: str, seen: tuple) -> list:
+        out = []
+        for entry in lists[name]:
+            if entry in lists and entry not in seen:
+                out.extend(expand(entry, seen + (entry,)))
+            else:
+                out.append(entry)
+        return out
+
+    sections = []
+    for section in model.sections:
+        ranges = tuple(
+            dataclasses.replace(sr, subscripts=expand(sr.name, (sr.name,)))
+            if isinstance(sr.subscripts, list) else sr
+            for sr in section.subscripts
+        )
+        sections.append(dataclasses.replace(section, subscripts=ranges))
+    return dataclasses.replace(model, sections=tuple(sections))
+
 
 class JuliaModelBuilder:
     """Build a standalone Julia/ModelingToolkit model from an AbstractModel.
@@ -113,45 +257,47 @@ class JuliaModelBuilder:
             raise ValueError(
                 f"backend must be 'ode' or 'mtk', got {backend!r}"
             )
+        abstract_model = expand_subscript_ranges(abstract_model)
         self.original_path = abstract_model.original_path
+        # Macros are expanded in place (macro_inliner), leaving the main section
+        abstract_model = inline_macros(abstract_model)
         self.sections = [
             JuliaSectionBuilder(section, data_format=data_format, backend=backend)
             for section in abstract_model.sections
         ]
 
     def build_model(self) -> Path:
-        """Translate all sections and return the path to the main ``.jl`` file.
-
-        The first section is always the main model.  Any additional sections
-        are Vensim macros; each gets its own ``<macro_name>.jl`` companion file.
-
-        Macro sections are built first so the main section knows their names
-        (to suppress spurious "Unknown Vensim function" warnings) and companion
-        file paths (to emit ``include()`` statements).
-        """
-        # Collect all macro Julia identifiers up-front so every section
-        # (including other macros doing cross-reference calls) can suppress
-        # "Unknown Vensim function" warnings for macro calls.
-        macro_names: Set[str] = {
-            re.sub(r"[^a-z0-9_]", "_", s.name.lower())
-            for s in self.sections[1:]
-        }
-
-        # Build macro sections first.
-        for section in self.sections[1:]:
-            section._known_macro_names = macro_names
-            section.build_section()
-
-        # Build main section with knowledge of all macro names + companion paths.
+        """Translate the model and return the path to the main ``.jl`` file."""
         main = self.sections[0]
-        main._known_macro_names = macro_names
-        main._macro_companion_paths = [
-            s._macro_companion_path
-            for s in self.sections[1:]
-            if getattr(s, "_macro_companion_path", None) is not None
-        ]
         main.build_section()
+        if main.backend == "ode" and not (main.split and main.views_dict):
+            tidy_julia_file(main.path)
         return main.path
+
+
+def tidy_julia_file(path: Path) -> bool:
+    """Write the expressions of a generated file with only the parentheses
+    they need, with Julia's own printer (``tidy.jl``): the expressions are
+    the same.  Needs ``julia`` on the PATH; without it the file is left as it
+    is, with a warning.  ``PYSD_JULIA_TIDY=0`` turns it off."""
+    import os
+    import shutil
+    import subprocess
+    if os.environ.get("PYSD_JULIA_TIDY", "1") == "0":
+        return False
+    julia = shutil.which("julia")
+    if julia is None:
+        warn("julia not found: the generated model keeps its extra parentheses "
+             "(install Julia to have them removed)")
+        return False
+    script = Path(__file__).with_name("tidy.jl")
+    try:
+        subprocess.run([julia, "--startup-file=no", str(script), str(path)],
+                       check=True, capture_output=True, text=True, timeout=600)
+    except (subprocess.SubprocessError, OSError) as exc:
+        warn(f"the generated model keeps its extra parentheses: {exc}")
+        return False
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +324,12 @@ class JuliaSectionBuilder:
         backend: str = "ode",
     ) -> None:
         self.backend: str = backend
+        self._ode_active_initial: bool = False
+        self._ode_p_names: Set[str] = set()
+        self._ode_stock_ndims: Dict[str, int] = {}
+        # constants whose value the translation used: name -> what it fixed
+        self._fixed_inputs: Dict[str, str] = {}
+        self._fix_reason: Optional[str] = None
         self.name: str = abstract_section.name
         self.path: Path = abstract_section.path.with_suffix(".jl")
         self.root: Path = self.path.parent
@@ -186,14 +338,8 @@ class JuliaSectionBuilder:
         self.views_dict: Optional[dict] = abstract_section.views_dict
         self.abstract_elements: List[AbstractElement] = list(abstract_section.elements)
         self._abstract_subscripts = abstract_section.subscripts
-        # Macro parameters (populated from abstract_section.params for macro sections)
-        self._macro_params: List[str] = list(abstract_section.params)
-        # Set by JuliaModelBuilder before building: Julia ids of known macros
+        # Julia ids of macros, for the visitor (empty: macros are expanded in place)
         self._known_macro_names: Set[str] = set()
-        # Set by JuliaModelBuilder before building: companion paths of macro sections
-        self._macro_companion_paths: List[Path] = []
-        # Set by _build_macro_section: path to this section's companion .jl file
-        self._macro_companion_path: Optional[Path] = None
         self.data_format: str = data_format
         # JSON data accumulator — populated when data_format == "json"
         self._json_data: Dict[str, dict] = {
@@ -265,6 +411,8 @@ class JuliaSectionBuilder:
         self._var_dims: Dict[str, List[str]] = {}
         # Names of identifiers that are lookup/data functions (need `(t)` when referenced bare)
         self._lookup_func_names: Set[str] = set()
+        # GET DATA variables (functions of time in params), reported by observe
+        self._data_names: Set[str] = set()
         # Tab-data entries: list of (julia_id, real_name, method_sym, dim_elem_lists)
         # where dim_elem_lists is a list of element-label lists (one per subscript dim)
         self._tab_data_entries: List[Tuple[str, str, str, List[List[str]]]] = []
@@ -291,172 +439,8 @@ class JuliaSectionBuilder:
     # Public interface
     # ------------------------------------------------------------------
 
-    def _build_macro_section(self) -> None:
-        """Generate a companion ``.jl`` file for a Vensim macro section.
-
-        **ODE backend**: emits a Julia function ``macro_name(params...)`` that
-        evaluates the macro's algebraic body and returns the output variable.
-        Stateful macros (containing INTEG stocks) are flagged with a warning
-        and a placeholder ``return 0.0`` is emitted.
-
-        **MTK backend**: emits the previous-style ``Equation[]`` vector
-        (``{macro_name}_eqs``) for use in ``ODESystem`` composition.
-        """
-        macro_jl_name = re.sub(r"[^a-z0-9_]", "_", self.name.lower())
-
-        # Add macro params to namespace so references to them inside the macro
-        # body don't produce "not found in namespace" warnings.
-        for param in self._macro_params:
-            clean = re.sub(r"[^a-z0-9_]", "_", param.lower())
-            self.namespace.namespace[param] = clean
-
-        # Populate namespace with element names
-        for elem in self.abstract_elements:
-            self.namespace.add_to_namespace(elem.name)
-
-        # Process all elements (macros have no control elements)
-        for elem in self.abstract_elements:
-            identifier = self.namespace.namespace[elem.name]
-            eqs = self._process_element(elem, identifier, is_control=False)
-            self.built_elements[identifier] = (eqs, False)
-
-        # Register inline lookups
-        for lut_name, xs, ys, itp_type in self.inline_registry.entries:
-            const_decl, func_decl, reg_decl = lookup_interpolation_code(
-                lut_name, xs, ys, itp_type
-            )
-            self.lookup_const_decls.append(const_decl)
-            self.lookup_func_decls.append(func_decl)
-            self.lookup_register_decls.append(reg_decl)
-
-        # Determine companion file path and write it
-        self.path = self.path.with_name(
-            f"{self.path.stem}_{macro_jl_name}.jl"
-        )
-        if self.data_format == "json":
-            self._write_data_json()
-
-        if self.backend == "ode":
-            text = self._build_macro_ode_text(macro_jl_name)
-        else:
-            text = self._build_macro_mtk_text(macro_jl_name)
-
-        self.path.write_text(text, encoding="UTF-8")
-        self._macro_companion_path = self.path
-
-    def _build_macro_ode_text(self, macro_jl_name: str) -> str:
-        """Return the companion file content for a macro in ODE-backend mode.
-
-        Generates a plain Julia function ``macro_name(params...)`` that
-        evaluates the macro body and returns the output variable.
-        """
-        all_eqs: List[str] = []
-        for eqs, _ in self.built_elements.values():
-            all_eqs.extend(eqs)
-
-        # Detect stateful macros (contain ODE equations D(x) ~ ...)
-        has_ode = any(
-            eq.strip().startswith("D(") or eq.strip().startswith("[D(")
-            for eq in all_eqs
-        )
-
-        param_list = ", ".join(
-            re.sub(r"[^a-z0-9_]", "_", p.lower()) for p in self._macro_params
-        )
-
-        if has_ode:
-            warn(
-                f"Macro '{macro_jl_name}' contains stocks (INTEG); "
-                "the ODE backend cannot inline stateful macros. "
-                "A placeholder function returning 0.0 is generated."
-            )
-            body = "    # Stateful macro — ODE stocks cannot be inlined; placeholder only.\n    return 0.0"
-        else:
-            # Collect algebraic equations and convert ~ → =
-            alg_eqs = [
-                eq for eq in all_eqs
-                if eq.strip() and not eq.strip().startswith("D(")
-                and not eq.strip().startswith("[D(")
-            ]
-            body_lines: List[str] = []
-            for eq in alg_eqs:
-                converted = self._convert_eq_to_assignment(eq.strip().rstrip(","))
-                body_lines.extend(f"    {line}" for line in converted)
-
-            # Return value: element whose Julia id matches the macro name,
-            # or the last element if no match.
-            return_id = macro_jl_name
-            if macro_jl_name not in self.built_elements:
-                ids = list(self.built_elements.keys())
-                return_id = ids[-1] if ids else macro_jl_name
-
-            if body_lines:
-                body = "\n".join(body_lines) + f"\n    return {return_id}"
-            else:
-                body = f"    return {return_id}"
-
-        # Build using/lookup preamble (DataInterpolations for inline lookups)
-        uses: List[str] = []
-        if self.lookup_const_decls:
-            uses.append("DataInterpolations")
-        if self.data_format == "json":
-            uses.append("JSON3")
-        using_line = f"using {', '.join(uses)}\n\n" if uses else ""
-        lookup_block = self._lookup_block() if self.lookup_const_decls else ""
-
-        return (
-            f"# Macro {self.name}\n"
-            f"# Translated using PySD version {__version__}\n\n"
-            f"{using_line}"
-            f"{lookup_block}"
-            f"function {macro_jl_name}({param_list})\n"
-            f"{body}\n"
-            f"end\n"
-        )
-
-    def _build_macro_mtk_text(self, macro_jl_name: str) -> str:
-        """Return the companion file content for a macro in MTK-backend mode."""
-        all_eqs: List[str] = []
-        for eqs, _ in self.built_elements.values():
-            all_eqs.extend(eqs)
-
-        eq_var = f"{macro_jl_name}_eqs"
-        eq_lines = ",\n    ".join(all_eqs) if all_eqs else ""
-        uses = ["ModelingToolkit", "Symbolics"]
-        if self.lookup_const_decls:
-            uses.append("DataInterpolations")
-        if self.data_format == "json":
-            uses.append("JSON3")
-        using_line = f"using {', '.join(uses)}"
-
-        return textwrap.dedent(f"""\
-            # Macro {self.name}
-            # Translated using PySD version {__version__}
-
-            {using_line}
-
-            {self._helpers_block()}
-            {self._lookup_block()}
-            {self._declarations_block()}
-            {eq_var} = Equation[
-                {eq_lines}
-            ]
-            """)
-
     def build_section(self) -> None:
-        """Build the section, writing one or more ``.jl`` files.
-
-        For macro sections (``type == 'macro'``) a standalone companion
-        ``.jl`` file is generated containing the macro's equations as a
-        Julia ``Equation`` vector named ``{macro_name}_eqs``.  The file
-        is written next to the main model file.
-        """
-        is_macro = (self.name != "__main__")
-
-        if is_macro:
-            self._build_macro_section()
-            return
-
+        """Build the section, writing its ``.jl`` file."""
         # First pass: populate the namespace with all element names
         for elem in self.abstract_elements:
             self.namespace.add_to_namespace(elem.name)
@@ -479,6 +463,8 @@ class JuliaSectionBuilder:
                 if all(isinstance(c.ast, GetLookupsStructure) for c in elem.components) or \
                    any(isinstance(c.ast, GetDataStructure) for c in elem.components):
                     self._lookup_func_names.add(identifier)
+                if any(isinstance(c.ast, GetDataStructure) for c in elem.components):
+                    self._data_names.add(identifier)
 
         # Emit subscript size constants (const N_DIMNAME = n)
         for name, size in sorted(self._subs_sizes.items()):
@@ -529,6 +515,8 @@ class JuliaSectionBuilder:
             eqs = self._process_element(elem, identifier, is_control)
             self.built_elements[identifier] = (eqs, is_control)
 
+        self._sort_u0_entries()
+
         # Register any inline lookups collected while visiting ASTs
         for lut_name, xs, ys, itp_type in self.inline_registry.entries:
             const_decl, func_decl, reg_decl = lookup_interpolation_code(lut_name, xs, ys, itp_type)
@@ -554,6 +542,22 @@ class JuliaSectionBuilder:
     # ------------------------------------------------------------------
     # Subscript helpers
     # ------------------------------------------------------------------
+
+    def _dispatch_n(self, comp: "AbstractComponent") -> str:
+        """Keyword arguments for pysd_xlsx_build_lookup_dispatch: ``n``, the
+        number of series (rows or columns from the start cell) that *comp*
+        covers, which PySD.jl needs in row and column mode; and ``method``,
+        the DATA keyword (HOLD BACKWARD, LOOK FORWARD), when given."""
+        kwargs = []
+        n = 1
+        for labels in self._comp_coords(comp).values():
+            n *= max(len(labels), 1)
+        if n > 1:
+            kwargs.append(f"n={n}")
+        keyword = getattr(comp, "keyword", None)
+        if keyword in ("hold_backward", "look_forward"):
+            kwargs.append(f"method=:{keyword}")
+        return "; " + ", ".join(kwargs) if kwargs else ""
 
     def _comp_coords(self, comp: "AbstractComponent") -> Dict[str, list]:
         """Build an ``{range_name: [element_labels]}`` coords dict for *comp*.
@@ -805,6 +809,16 @@ class JuliaSectionBuilder:
             f"{iv} in 1:{self._jl_n(d)}" for (d, _), iv in zip(dims, idx_vars)
         )
 
+    @staticmethod
+    def _nd_cells(dims: List[Tuple[str, int]], idx_vars: List[str], expr: str):
+        """Yield ``(index, expr)`` for every cell of *dims*, with the loop
+        variables in *expr* replaced by that cell's indices."""
+        for combo in itertools.product(*[range(1, n + 1) for _, n in dims]):
+            cell_expr = expr
+            for iv, val in zip(idx_vars, combo):
+                cell_expr = re.sub(rf"\b{iv}\b", str(val), cell_expr)
+            yield ", ".join(map(str, combo)), cell_expr
+
     def _nd_visitor(self, dims: List[Tuple[str, int]], idx_vars: List[str]) -> "JuliaASTVisitor":
         """Return a visitor with active subscript index context for N dims."""
         active_subs = {d: iv for (d, _), iv in zip(dims, idx_vars)}
@@ -888,6 +902,7 @@ class JuliaSectionBuilder:
         #     piecewise-defined auxiliaries (e.g. hist_share[elec]=0, [heat]=0,
         #     [liquids]=f(...)).
         if len(elem.components) > 1:
+            elem = self._lift_mixed_constants(elem, identifier)
             _has_except = any(comp.subscripts[1] for comp in elem.components)
             # Only apply per-element detection to plain auxiliary/constant
             # components — skip when the element uses external structures
@@ -898,10 +913,9 @@ class JuliaSectionBuilder:
                 for c in elem.components
             )
             _has_per_elem = not _is_external and any(
-                c.subscripts and c.subscripts[0]
-                and c.subscripts[0][0] not in self._subs_elems
-                and c.subscripts[0][0] in self._elem_to_range
-                for c in elem.components
+                sub not in self._subs_elems and sub in self._elem_to_range
+                for c in elem.components if c.subscripts
+                for sub in c.subscripts[0]
             )
             # Multi-component inline lookup tables (e.g. lookup1dim[A](...) ~~|
             # lookup1dim[B](...)) are all AbstractLookup + LookupsStructure.
@@ -913,7 +927,12 @@ class JuliaSectionBuilder:
             if _all_inline_lookups:
                 return self._process_subscripted_inline_lookup(elem, identifier)
 
-            if _has_except or _has_per_elem:
+            # Components over different subranges (x[Disp, Mat] = 0;
+            # x[Var, Mat] = ...): each covers its own elements
+            _subs_lists = [tuple(c.subscripts[0]) for c in elem.components if c.subscripts]
+            _has_subrange_split = not _is_external and len(set(_subs_lists)) > 1
+
+            if _has_except or _has_per_elem or _has_subrange_split:
                 return self._process_except_element(elem, identifier, is_control)
 
         comp = elem.components[0]
@@ -953,7 +972,12 @@ class JuliaSectionBuilder:
         #     the initial condition at t0 and holds it constant:
         #       D(initial_var) ~ 0.0 ; initial_var(t0) = inner_expr
         if isinstance(ast, InitialStructure):
-            val = self._resolve_initial_value(ast.initial)
+            if self.backend == "ode" and not isinstance(ast.initial, (int, float)):
+                # evaluated by initial_state from the parameters, so that it
+                # follows the constants given to params()
+                val = None
+            else:
+                val = self._resolve_initial_value(ast.initial)
             if val is not None:
                 if not is_control:
                     self.param_decls.append(f"@parameters {identifier} = {val}")
@@ -970,6 +994,7 @@ class JuliaSectionBuilder:
             if ndim == 0:
                 self.stock_decls.append(f"@variables {identifier}(t)")
                 self.u0_entries.append(f"{identifier} => {initial_expr}")
+                flow_expr = _non_negative_flow(ast, flow_expr, identifier)
                 return [f"D({identifier}) ~ {flow_expr}"]
             elif ndim == 1:
                 (d0, n0) = dims[0]
@@ -995,6 +1020,7 @@ class JuliaSectionBuilder:
                         self.u0_entries.append(
                             f"{identifier}[{i}] => {init_nd1.replace('_i0', str(i))}"
                         )
+                flow_nd1 = _non_negative_flow(ast, flow_nd1, f"{identifier}[_i0]")
                 return [
                     f"[D({identifier}[_i0]) ~ {flow_nd1} "
                     f"for _i0 in 1:{self._jl_n(d0)}]..."
@@ -1034,6 +1060,7 @@ class JuliaSectionBuilder:
                         for var, val in zip(idx_vars, idx_combo):
                             init_val = init_val.replace(var, str(val))
                         self.u0_entries.append(f"{identifier}[{idx_s}] => {init_val}")
+                flow_nd = _non_negative_flow(ast, flow_nd, f"{identifier}[{idx_str}]")
                 return [
                     f"[D({identifier}[{idx_str}]) ~ {flow_nd} "
                     f"for {self._for_clause(dims, idx_vars)}]..."
@@ -1050,7 +1077,7 @@ class JuliaSectionBuilder:
             except (TypeError, ValueError):
                 order = None
                 if isinstance(ast, SmoothNStructure):
-                    t0_val = self._eval_ast_at_t0(ast.order)
+                    t0_val = self._eval_fixing(ast.order, f"the order of SMOOTH N in {identifier}")
                     if t0_val is not None:
                         order = max(1, round(t0_val))
                 if order is None:
@@ -1067,21 +1094,30 @@ class JuliaSectionBuilder:
             except (TypeError, ValueError):
                 order = None
                 if isinstance(ast, DelayNStructure):
-                    t0_val = self._eval_ast_at_t0(ast.order)
+                    # the order is read once, at the initial time, and truncated
+                    t0_val = self._eval_fixing(ast.order, f"the order of DELAY N in {identifier}")
                     if t0_val is not None:
-                        order = max(1, round(t0_val))
+                        order = max(1, int(t0_val))
                 if order is None:
                     warn(
                         f"DELAY with non-integer order for '{elem.name}'; defaulting to 3."
                     )
                     order = 3
+            # As Python PySD: lower the order while order * time_step exceeds
+            # the delay time (at the initial time)
+            delay0 = self._eval_ast_at_t0(ast.delay_time)
+            ts0 = self._eval_ast_at_t0(ReferenceStructure("time_step"))
+            if delay0 is not None and ts0 and order > 1 and order * ts0 > delay0:
+                # the order depends on the delay time
+                self._eval_fixing(ast.delay_time, f"the order of the delay in {identifier}")
+            if delay0 is not None and ts0:
+                while order > 1 and order * ts0 > delay0:
+                    order -= 1
             return self._expand_delay(identifier, ast, visitor, order=order, dims=dims)
 
         # ---- DELAY FIXED ------------------------------------------------
-        # Approximate DELAY FIXED as a first-order ODE delay (same formula
-        # as DELAY1 with order=1).  True fixed delays need a DDE solver
-        # that ModelingToolkit/OrdinaryDiffEq does not support, so this is
-        # the best we can do in the MTK ODE framework.
+        # N-stage pipeline, N from the delay time at the initial time (first-order
+        # approximation only if that cannot be evaluated); see _expand_delay_fixed.
         if isinstance(ast, DelayFixedStructure):
             return self._expand_delay_fixed(identifier, ast, visitor, dims=dims)
 
@@ -1143,11 +1179,11 @@ class JuliaSectionBuilder:
 
         # ---- TREND ------------------------------------------------------
         if isinstance(ast, TrendStructure):
-            return self._expand_trend(identifier, ast, visitor)
+            return self._expand_trend(identifier, ast, visitor, dims=dims)
 
         # ---- FORECAST ---------------------------------------------------
         if isinstance(ast, ForecastStructure):
-            return self._expand_forecast(identifier, ast, visitor)
+            return self._expand_forecast(identifier, ast, visitor, dims=dims)
 
         # ---- SAMPLE IF TRUE ---------------------------------------------
         if isinstance(ast, SampleIfTrueStructure):
@@ -1155,7 +1191,7 @@ class JuliaSectionBuilder:
 
         # ---- ALLOCATE AVAILABLE / ALLOCATE BY PRIORITY ------------------
         if isinstance(ast, (AllocateAvailableStructure, AllocateByPriorityStructure)):
-            return self._expand_allocate(identifier, ast, visitor)
+            return self._expand_allocate(identifier, ast, visitor, dims=dims)
 
         # ---- DataStructure (tab-file DATA variable) ----------------------
         # AbstractData + DataStructure = DATA variable reading from a .tab file
@@ -1204,6 +1240,15 @@ class JuliaSectionBuilder:
                     except (ValueError, TypeError):
                         pass
             else:
+                import numpy as _np
+                if isinstance(ast, _np.ndarray) and ndim >= 2:
+                    # The values as a Julia array of the variable's shape, from
+                    # Vensim's row-major order (Julia arrays are column-major)
+                    flat = ", ".join(format_number(float(v)) for v in ast.flatten())
+                    sizes = [self._jl_n(d) for d, _ in dims]
+                    perm = ", ".join(str(k) for k in range(ndim, 0, -1))
+                    value_expr = (f"permutedims(reshape(Float64[{flat}], "
+                                  f"{', '.join(reversed(sizes))}), ({perm}))")
                 self.param_decls.append(
                     f"@parameters {identifier}[{self._range_str(dims)}] = {value_expr}{lim_comment}"
                 )
@@ -1266,6 +1311,10 @@ class JuliaSectionBuilder:
             try:
                 import numpy as _np
                 expected_shape = tuple(n for _, n in dims)
+                if (isinstance(ast, _np.ndarray) and ast.shape != expected_shape
+                        and ast.size == int(_np.prod(expected_shape))):
+                    # e.g. TABBED ARRAY gives the values as one row-major list
+                    ast = ast.reshape(expected_shape)
                 if isinstance(ast, _np.ndarray) and ast.shape == expected_shape:
                     if is_control:
                         return []
@@ -1371,6 +1420,31 @@ class JuliaSectionBuilder:
     # ------------------------------------------------------------------
     # EXCEPT subscript exclusion
     # ------------------------------------------------------------------
+
+    def _lift_mixed_constants(
+        self, elem: AbstractElement, identifier: str
+    ) -> AbstractElement:
+        """A variable defined in parts where some parts are GET CONSTANTS and
+        others are equations (``x[a1] = GET DIRECT CONSTANTS(...)``,
+        ``x[a2] = y * 2``): each constant
+        part is read into its own module constant and referenced from that
+        part, so the variable is built like any variable defined in parts."""
+        comps = elem.components
+        if not any(isinstance(c.ast, GetConstantsStructure) for c in comps) or all(
+            isinstance(c.ast, (GetConstantsStructure, int, float)) for c in comps
+        ):
+            return elem
+        lifted = []
+        for k, comp in enumerate(comps):
+            if isinstance(comp.ast, GetConstantsStructure):
+                name = f"_{identifier}_constant_{k}"
+                part = AbstractElement(name=name, components=[comp])
+                value = self._read_get_constants(part, name)
+                self.namespace.namespace[name] = name
+                self.ext_const_decls.append(f"const {name} = {value}")
+                comp = dataclasses.replace(comp, ast=ReferenceStructure(name))
+            lifted.append(comp)
+        return dataclasses.replace(elem, components=lifted)
 
     def _process_except_element(
         self,
@@ -1506,6 +1580,8 @@ class JuliaSectionBuilder:
                     flow_expr = vis_idx.visit(comp.ast.flow)
                     init_expr = vis_idx.visit(comp.ast.initial)
                     self.u0_entries.append(f"{identifier}[{idx}] => {init_expr}")
+                    flow_expr = _non_negative_flow(
+                        comp.ast, flow_expr, f"{identifier}[{idx}]")
                     equations.append(f"D({identifier}[{idx}]) ~ {flow_expr}")
 
             elif isinstance(comp.ast, DelayFixedStructure):
@@ -1530,6 +1606,17 @@ class JuliaSectionBuilder:
                         f"({input_expr} - {df_name}[{idx}]) / {delay_expr}"
                     )
                     equations.append(f"{identifier}[{idx}] ~ {df_name}[{idx}]")
+
+            elif (def_subs and def_subs[0] == dim_name and covered_indices
+                  and not isinstance(comp.ast, (int, float))):
+                # Auxiliary component over the full range (but the excluded
+                # elements): one loop over its elements, as without EXCEPT
+                rhs_expr = self._nd_visitor(dims, ["_i0"]).visit(comp.ast)
+                index_list = (f"1:{self._jl_n(dim_name)}"
+                              if covered_indices == list(range(1, len(dim_elems) + 1))
+                              else "[" + ", ".join(str(i) for i in covered_indices) + "]")
+                equations.append(
+                    f"[{identifier}[_i0] ~ {rhs_expr} for _i0 in {index_list}]...")
 
             else:
                 # Auxiliary component — use a per-index visitor with aligned
@@ -1612,54 +1699,77 @@ class JuliaSectionBuilder:
                     for j in exc1_idx:
                         excluded.add((i, j))
 
-            final0 = [i for i in covered0 if all((i, j) not in excluded for j in covered1)]
-            final1 = covered1  # column coverage doesn't change
-
-            if not final0 or not final1:
+            # The cells this component defines, grouped into blocks of rows
+            # that cover the same columns (EXCEPT may remove single cells)
+            row_cols: Dict[int, Tuple[int, ...]] = {}
+            for i in covered0:
+                cols = tuple(j for j in covered1 if (i, j) not in excluded)
+                if cols:
+                    row_cols[i] = cols
+            blocks: Dict[Tuple[int, ...], List[int]] = {}
+            for i, cols in row_cols.items():
+                blocks.setdefault(cols, []).append(i)
+            if not blocks:
                 continue
+            # Ranges of this component that stand for the loops over the
+            # variable's dimensions (x[dim1up, d3] inside x[dim1, dim2])
+            aliases = {
+                spec: dim for spec, dim in ((sub0_spec, dim0_name), (sub1_spec, dim1_name))
+                if spec != dim and spec in self._subs_sizes
+            }
 
             if isinstance(comp.ast, IntegStructure):
-                # Stock component — emit per-pair D(identifier[i,j]) ODE equations.
-                for i0 in final0:
-                    for i1 in final1:
-                        if (i0, i1) in excluded:  # pragma: no cover  # unreachable: final0 only contains rows unexcluded for all cols
-                            continue
-                        vis_ij = JuliaASTVisitor(
-                            self.namespace, self.inline_registry, self.needed_helpers,
-                            active_subs={dim0_name: str(i0), dim1_name: str(i1)},
-                            var_dims=self._var_dims, subs_sizes=self._subs_sizes,
-                            subs_elems=self._subs_elems, lookup_names=self._lookup_func_names,
-                            root=self.root, macro_names=self._known_macro_names,
-                        )
-                        flow_expr = vis_ij.visit(comp.ast.flow)
-                        init_expr = vis_ij.visit(comp.ast.initial)
-                        self.u0_entries.append(f"{identifier}[{i0}, {i1}] => {init_expr}")
-                        equations.append(f"D({identifier}[{i0}, {i1}]) ~ {flow_expr}")
+                # Stock component: one u0 entry per cell, and the flows as one
+                # comprehension per block of rows that cover the same columns
+                vnd = self._nd_visitor(dims, ["_i0", "_i1"])
+                vnd.sub_aliases = aliases
+                flow_expr = vnd.visit(comp.ast.flow)
+                init_expr = vnd.visit(comp.ast.initial)
+                flow_expr = _non_negative_flow(
+                    comp.ast, flow_expr, f"{identifier}[_i0, _i1]")
+                for i0, cols in row_cols.items():
+                    for i1 in cols:
+                        init_val = re.sub(r"\b_i0\b", str(i0), init_expr)
+                        init_val = re.sub(r"\b_i1\b", str(i1), init_val)
+                        self.u0_entries.append(f"{identifier}[{i0}, {i1}] => {init_val}")
+                for cols, rows in blocks.items():
+                    row_str = "[" + ", ".join(str(i) for i in rows) + "]"
+                    col_str = "[" + ", ".join(str(j) for j in cols) + "]"
+                    equations.append(
+                        f"[D({identifier}[_i0, _i1]) ~ {flow_expr} "
+                        f"for _i0 in {row_str}, _i1 in {col_str}]..."
+                    )
             else:
-                # Auxiliary component — use comprehension over remaining index ranges.
-                # Check if all remaining rows still cover the full column range
-                # (so we can use a range expression rather than an explicit list).
-                full_col_range = list(range(1, len(dim1_elems) + 1))
-                use_full_cols = final1 == full_col_range
+                # Auxiliary component — one comprehension per block of rows
+                # that cover the same columns.
+                full_rows = list(range(1, len(dim0_elems) + 1))
+                full_cols = list(range(1, len(dim1_elems) + 1))
+                if len(blocks) == 1:
+                    (cols, rows), = blocks.items()
+                    arr_eqs = self._ndarray_component_eqs(
+                        identifier, comp.ast, [rows, list(cols)]
+                    )
+                    if arr_eqs is not None:
+                        equations.extend(arr_eqs)
+                        continue
 
                 vnd = self._nd_visitor(dims, ["_i0", "_i1"])
+                vnd.sub_aliases = aliases
                 rhs_expr = vnd.visit(comp.ast)
 
-                row_str = (
-                    f"1:{self._jl_n(dim0_name)}"
-                    if final0 == list(range(1, len(dim0_elems) + 1))
-                    else "[" + ", ".join(str(i) for i in final0) + "]"
-                )
-                col_str = (
-                    f"1:{self._jl_n(dim1_name)}"
-                    if use_full_cols
-                    else "[" + ", ".join(str(j) for j in final1) + "]"
-                )
-
-                equations.append(
-                    f"[{identifier}[_i0, _i1] ~ {rhs_expr} "
-                    f"for _i0 in {row_str}, _i1 in {col_str}]..."
-                )
+                for cols, rows in blocks.items():
+                    row_str = (
+                        f"1:{self._jl_n(dim0_name)}" if rows == full_rows
+                        else "[" + ", ".join(str(i) for i in rows) + "]"
+                    )
+                    col_str = (
+                        f"1:{self._jl_n(dim1_name)}" if list(cols) == full_cols
+                        else "[" + ", ".join(str(j) for j in cols) + "]"
+                    )
+                    equations.append(
+                        f"[{identifier}[_i0, _i1] ~ {rhs_expr} "
+                        f"for _i0 in {row_str}, _i1 in {col_str}]..."
+                    )
 
         if not is_control:
             if has_integ_2d:
@@ -1671,6 +1781,31 @@ class JuliaSectionBuilder:
                     f"@variables {identifier}(t)[{self._range_str(dims)}]"
                 )
         return equations
+
+    @staticmethod
+    def _ndarray_component_eqs(
+        identifier: str, value, covered: List[List[int]]
+    ) -> Optional[List[str]]:
+        """Per-element equations for a component whose value is a numpy array.
+
+        *covered* holds, per dimension, the 1-based indices the component
+        defines (e.g. ``[[1, 2, 3], [1, 2], [2]]`` for ``x[A, B, b2]``).  The
+        array holds one value per covered element (dimensions of length 1 may
+        be dropped), so it is reshaped to the covered shape and walked in the
+        same order as the index combinations.  Returns ``None`` when *value*
+        is not an array of matching size.
+        """
+        import numpy as _np
+        if not isinstance(value, _np.ndarray):
+            return None
+        shape = [len(c) for c in covered]
+        if value.size != int(_np.prod(shape)):
+            return None
+        arr = value.astype(float).reshape(shape)
+        return [
+            f"{identifier}[{', '.join(map(str, idx))}] ~ {format_number(float(arr[pos]))}"
+            for pos, idx in zip(_np.ndindex(*shape), itertools.product(*covered))
+        ]
 
     def _process_except_element_3d(
         self,
@@ -1700,6 +1835,7 @@ class JuliaSectionBuilder:
             return [i + 1 for i, e in enumerate(dim_elems) if e == spec]
 
         equations: List[str] = []
+        has_integ = False
 
         for comp in elem.components:
             s0 = comp.subscripts[0][0] if len(comp.subscripts[0]) > 0 else dim0_name
@@ -1724,19 +1860,28 @@ class JuliaSectionBuilder:
                         for k in exc2:
                             excluded.add((i, j, k))
 
-            # Apply exclusion to dim0; keep dim1 and dim2 as-is
-            final0 = [
-                i for i in covered0
-                if not all((i, j, k) in excluded for j in covered1 for k in covered2)
-            ]
-            final1 = covered1
-            final2 = covered2
-
-            if not final0 or not final1 or not final2:
+            # The cells this component defines (EXCEPT may remove single
+            # cells), as rectangular blocks
+            cells = set(itertools.product(covered0, covered1, covered2)) - excluded
+            blocks = _cell_blocks(cells)
+            if not blocks:
                 continue
 
+            if len(blocks) == 1:
+                arr_eqs = self._ndarray_component_eqs(
+                    identifier, comp.ast, list(blocks[0])
+                )
+                if arr_eqs is not None:
+                    equations.extend(arr_eqs)
+                    continue
+
             vnd = self._nd_visitor(dims, ["_i0", "_i1", "_i2"])
-            rhs_expr = vnd.visit(comp.ast)
+            # Ranges of this component that stand for the loops over the
+            # variable's dimensions (x[REGION, SEC A, …] inside x[REGION, SEC ALL, …])
+            vnd.sub_aliases = {
+                spec: dim for spec, dim in ((s0, dim0_name), (s1, dim1_name), (s2, dim2_name))
+                if spec != dim and spec in self._subs_sizes
+            }
 
             def _idx_str(indices: List[int], dim_elems: List[str], dim_name: str) -> str:
                 full = list(range(1, len(dim_elems) + 1))
@@ -1744,17 +1889,43 @@ class JuliaSectionBuilder:
                     return f"1:{self._jl_n(dim_name)}"
                 return "[" + ", ".join(str(i) for i in indices) + "]"
 
-            d0_str = _idx_str(final0, dim0_elems, dim0_name)
-            d1_str = _idx_str(final1, dim1_elems, dim1_name)
-            d2_str = _idx_str(final2, dim2_elems, dim2_name)
+            def _for_clause(block) -> str:
+                return "for " + ", ".join(
+                    f"{iv} in {_idx_str(idx, elems, name)}"
+                    for iv, idx, elems, name in zip(
+                        ("_i0", "_i1", "_i2"), block,
+                        (dim0_elems, dim1_elems, dim2_elems),
+                        (dim0_name, dim1_name, dim2_name)))
 
-            equations.append(
-                f"[{identifier}[_i0, _i1, _i2] ~ {rhs_expr} "
-                f"for _i0 in {d0_str}, _i1 in {d1_str}, _i2 in {d2_str}]..."
-            )
+            if isinstance(comp.ast, IntegStructure):
+                # Stock component (e.g. Stock A[A, B, Depth 1] = INTEG(...)):
+                # one u0 entry per covered element, flows as a comprehension.
+                has_integ = True
+                flow_expr = vnd.visit(comp.ast.flow)
+                init_expr = vnd.visit(comp.ast.initial)
+                for combo in sorted(cells):
+                    init_val = init_expr
+                    for var, val in zip(("_i0", "_i1", "_i2"), combo):
+                        init_val = re.sub(rf"\b{var}\b", str(val), init_val)
+                    idx_s = ", ".join(str(i) for i in combo)
+                    self.u0_entries.append(f"{identifier}[{idx_s}] => {init_val}")
+                flow_expr = _non_negative_flow(
+                    comp.ast, flow_expr, f"{identifier}[_i0, _i1, _i2]")
+                for block in blocks:
+                    equations.append(
+                        f"[D({identifier}[_i0, _i1, _i2]) ~ {flow_expr} {_for_clause(block)}]..."
+                    )
+                continue
+
+            rhs_expr = vnd.visit(comp.ast)
+            for block in blocks:
+                equations.append(
+                    f"[{identifier}[_i0, _i1, _i2] ~ {rhs_expr} {_for_clause(block)}]..."
+                )
 
         if not is_control:
-            self.aux_decls.append(
+            decls = self.stock_decls if has_integ else self.aux_decls
+            decls.append(
                 f"@variables {identifier}(t)[{self._range_str(dims)}]"
             )
         return equations
@@ -1824,12 +1995,15 @@ class JuliaSectionBuilder:
         eqs: List[str] = []
 
         if dims:
-            # Subscripted SMOOTH — each internal level is an array.
-            (d0, n0) = dims[0]
-            vnd = self._nd_visitor(dims, ["_i0"])
+            # Subscripted SMOOTH — each internal level is an array over the
+            # variable's dimensions (any number of them).
+            idx = self._idx_vars(len(dims))
+            vnd = self._nd_visitor(dims, idx)
             input_nd = vnd.visit(ast.input)
             st_nd = vnd.visit(ast.smooth_time)
             init_nd = vnd.visit(ast.initial)
+            for_clause = self._for_clause(dims, idx)
+            cell = ", ".join(idx)
 
             prev_nd = input_nd
             for i in range(1, order + 1):
@@ -1838,20 +2012,19 @@ class JuliaSectionBuilder:
                 self.stock_decls.append(
                     f"@variables {lv_name}(t)[{self._range_str(dims)}]"
                 )
-                for idx in range(1, n0 + 1):
-                    init_i = init_nd.replace("_i0", str(idx))
-                    self.u0_entries.append(f"{lv_name}[{idx}] => {init_i}")
-                lv_ref = f"{lv_name}[_i0]"
+                for index, init_i in self._nd_cells(dims, idx, init_nd):
+                    self.u0_entries.append(f"{lv_name}[{index}] => {init_i}")
+                lv_ref = f"{lv_name}[{cell}]"
                 eqs.append(
                     f"[D({lv_ref}) ~ ({prev_nd} - {lv_ref}) / "
-                    f"({st_nd} / {order}) for _i0 in 1:{self._jl_n(d0)}]..."
+                    f"({st_nd} / {order}) for {for_clause}]..."
                 )
                 prev_nd = lv_ref
             self.aux_decls.append(
                 f"@variables {identifier}(t)[{self._range_str(dims)}]"
             )
             eqs.append(
-                f"[{identifier}[_i0] ~ {prev_nd} for _i0 in 1:{self._jl_n(d0)}]..."
+                f"[{identifier}[{cell}] ~ {prev_nd} for {for_clause}]..."
             )
         else:
             # Materialise the input: if it's itself a complex structure (e.g.
@@ -1909,9 +2082,13 @@ class JuliaSectionBuilder:
             for_clause = self._for_clause(dims, idx_vars)
             ranges_list = [range(1, size + 1) for _, size in dims]
 
-            rate_nd = f"({order} / ({delay_time_nd}))"
+            stage_times, out_time = self._delay_stage_times(
+                identifier, ast, delay_time_nd, delay_time_nd, order, eqs,
+                dims=dims, idx=idx_str_t, for_clause=for_clause,
+                ranges=ranges_list, idx_vars=idx_vars)
             prev_nd = input_nd
             for stage in range(1, order + 1):
+                rate_nd = f"({order} / ({stage_times[stage - 1]}))"
                 lv_name = f"_dl{stage}_{identifier}"
                 self.namespace.namespace[f"__internal_dl{stage}_{identifier}"] = lv_name
                 self.stock_decls.append(
@@ -1936,13 +2113,15 @@ class JuliaSectionBuilder:
             self.aux_decls.append(
                 f"@variables {identifier}(t)[{self._range_str(dims)}]"
             )
-            eqs.append(f"[{identifier}[{idx_str_t}] ~ {prev_nd} for {for_clause}]...")
+            out_nd = f"_dl{order}_{identifier}[{idx_str_t}] .* ({order} / ({out_time}))"
+            eqs.append(f"[{identifier}[{idx_str_t}] ~ {out_nd} for {for_clause}]...")
             return eqs
 
         input_expr = visitor.visit(ast.input)
         delay_time_expr = visitor.visit(ast.delay_time)
         initial_expr = visitor.visit(ast.initial)
-        rate_expr = f"({order} / {delay_time_expr})"
+        stage_times, out_time = self._delay_stage_times(
+            identifier, ast, delay_time_expr, delay_time_expr, order, eqs)
         prev_outflow = input_expr
         for i in range(1, order + 1):
             lv_name = f"_dl{i}_{identifier}"
@@ -1951,18 +2130,69 @@ class JuliaSectionBuilder:
             self.u0_entries.append(
                 f"{lv_name} => {initial_expr} * {delay_time_expr} / {order}"
             )
+            rate_i = f"({order} / {stage_times[i - 1]})"
             eqs.append(
-                f"D({lv_name}) ~ ({prev_outflow} - {lv_name} * {rate_expr})"
+                f"D({lv_name}) ~ ({prev_outflow} - {lv_name} * {rate_i})"
             )
-            prev_outflow = f"{lv_name} * {rate_expr}"
+            prev_outflow = f"{lv_name} * {rate_i}"
 
         self.aux_decls.append(f"@variables {identifier}(t)")
-        eqs.append(f"{identifier} ~ {prev_outflow}")
+        eqs.append(f"{identifier} ~ _dl{order}_{identifier} * ({order} / {out_time})")
         return eqs
+
+    def _delay_stage_times(self, identifier, ast, delay_time_expr, u0_delay_expr,
+                           order, eqs, dims=None, idx=None, for_clause=None,
+                           ranges=None, idx_vars=None):
+        """Delay times of a DELAY N: one per stage, and one for the output.
+
+        As Python PySD (DelayN), when the delay time changes stage k uses the
+        delay time of k - 1 time steps ago, and the output the one of the
+        previous time step; for a constant delay time, or DELAY1/DELAY3, all
+        use the current one.  The past values are kept in a pipeline of states
+        (exact with Euler, as DELAY FIXED), whose equations are appended to
+        *eqs*.
+        """
+        constant = self._try_eval_as_float(delay_time_expr) is not None
+        if not isinstance(ast, DelayNStructure) or constant:
+            return [delay_time_expr] * order, delay_time_expr
+        ts_expr = self.control_vals.get("time_step") or "time_step"
+        times = [delay_time_expr]
+        prev = delay_time_expr
+        for k in range(1, max(order, 2)):
+            name = f"_dlt{k}_{identifier}"
+            self.namespace.namespace[f"__internal_dlt{k}_{identifier}"] = name
+            if dims:
+                self.stock_decls.append(f"@variables {name}(t)[{self._range_str(dims)}]")
+                for combo in itertools.product(*ranges):
+                    expr_i = u0_delay_expr
+                    for iv, val in zip(idx_vars, combo):
+                        expr_i = expr_i.replace(iv, str(val))
+                    idx_s = ", ".join(str(v) for v in combo)
+                    self.u0_entries.append(f"{name}[{idx_s}] => {expr_i}")
+                ref = f"{name}[{idx}]"
+                eqs.append(f"[D({ref}) ~ ({prev} - {ref}) / ({ts_expr}) for {for_clause}]...")
+            else:
+                self.stock_decls.append(f"@variables {name}(t)")
+                self.u0_entries.append(f"{name} => {u0_delay_expr}")
+                ref = name
+                eqs.append(f"D({ref}) ~ ({prev} - {ref}) / ({ts_expr})")
+            times.append(ref)
+            prev = ref
+        return times[:order], times[1]
 
     # ------------------------------------------------------------------
     # DELAY FIXED expansion
     # ------------------------------------------------------------------
+
+    def _eval_fixing(self, node, reason: str) -> Optional[float]:
+        """``_eval_ast_at_t0``, recording the constants it reads as fixed by
+        the translation (for *reason*): ``params()`` refuses new values for
+        them, which would need the model translated again."""
+        saved, self._fix_reason = self._fix_reason, reason
+        try:
+            return self._eval_ast_at_t0(node)
+        finally:
+            self._fix_reason = saved
 
     def _eval_ast_at_t0(self, node) -> Optional[float]:
         """Evaluate an abstract-expression AST node at t=0.
@@ -2004,9 +2234,21 @@ class JuliaSectionBuilder:
             # Functions that are zero at t=0
             if func_name in ("step", "ramp", "pulse", "pulse train"):
                 return 0.0
+            if func_name in _T0_MATH:
+                args = [self._eval_ast_at_t0(a) for a in node.arguments]
+                if any(v is None for v in args):
+                    return None
+                try:
+                    return float(_T0_MATH[func_name](*args))
+                except (TypeError, ValueError, ZeroDivisionError, OverflowError):
+                    return None
             return None
         if isinstance(node, ReferenceStructure):
+            if node.reference.lower() == "time":
+                return self._eval_ast_at_t0(ReferenceStructure("initial_time"))
             julia_id = self.namespace.get(node.reference)
+            if julia_id is not None and self._fix_reason:
+                self._fixed_inputs.setdefault(julia_id, self._fix_reason)
             if julia_id is not None:
                 val = self._try_eval_as_float(julia_id)
                 if val is not None:
@@ -2044,6 +2286,8 @@ class JuliaSectionBuilder:
             return float(expr)
         except ValueError:
             pass
+        if self._fix_reason and re.fullmatch(r"[a-z_]\w*", expr):
+            self._fixed_inputs.setdefault(expr, self._fix_reason)
         # Check pre-scanned constants (covers forward references — constants not
         # yet processed at the time this DELAY FIXED element is being built).
         if hasattr(self, "_prescanned_const_vals") and expr in self._prescanned_const_vals:
@@ -2100,33 +2344,42 @@ class JuliaSectionBuilder:
         time) a single first-order ODE approximation is emitted instead.
         """
         dims = dims or []
+        if dims:
+            # x[Dim1] = DELAY FIXED(y[Dim1], …): the arguments are read
+            # inside the loop over the variable's dimensions
+            visitor = self._nd_visitor(dims, self._idx_vars(len(dims)))
         input_expr = visitor.visit(ast.input)
         delay_time_expr = visitor.visit(ast.delay_time)
         initial_expr = visitor.visit(ast.initial)
 
-        # ---- Attempt N-stage pipeline (ODE backend, constant delay_time) ----
-        if self.backend == "ode":
-            ts_str = self.control_vals.get("time_step")
-            ts_val = float(ts_str) if ts_str is not None else None
-            if ts_val is None:
-                try:
-                    ts_val = float(ts_str or "1.0")
-                except (ValueError, TypeError):  # pragma: no cover  # ts_str is None → "1.0" always valid
-                    ts_val = None
+        # ---- N-stage pipeline, both backends ----
+        # As Python PySD (DelayFixed), the number of stages comes from the delay
+        # time at the initial time; with Euler and dt = time_step the pipeline
+        # is exact.
+        ts_val = self._eval_ast_at_t0(ReferenceStructure("time_step"))
+        if ts_val is None:
+            ts_val = 1.0  # Vensim's default TIME STEP
+        reason = f"the number of stages of DELAY FIXED in {identifier}"
+        self._fix_reason = reason
+        try:
             dt_val = self._try_eval_as_float(delay_time_expr)
-            if dt_val is not None and ts_val is not None and ts_val > 0:
-                N = max(round(dt_val / ts_val + 1e-6), 1)
-                return self._expand_delay_fixed_pipeline(
-                    identifier, input_expr, initial_expr, N, dims
-                )
-            else:
-                warn(
-                    f"DELAY FIXED for '{identifier}': delay time '{delay_time_expr}' "
-                    "cannot be evaluated at translation time — "
-                    "falling back to first-order ODE approximation."
-                )
+        finally:
+            self._fix_reason = None
+        if dt_val is None:
+            dt_val = self._eval_fixing(ast.delay_time, reason)
+        if dt_val is not None and ts_val is not None and ts_val > 0:
+            N = max(round(dt_val / ts_val + 1e-6), 1)
+            return self._expand_delay_fixed_pipeline(
+                identifier, input_expr, initial_expr, N, dims
+            )
+        else:
+            warn(
+                f"DELAY FIXED for '{identifier}': delay time '{delay_time_expr}' "
+                "cannot be evaluated at translation time — "
+                "falling back to first-order ODE approximation."
+            )
 
-        # ---- MTK / fallback: single first-order ODE approximation ----
+        # ---- Fallback: single first-order ODE approximation ----
         lv_name = f"_df_{identifier}"
         self.namespace.namespace[f"__internal_df_{identifier}"] = lv_name
 
@@ -2174,77 +2427,52 @@ class JuliaSectionBuilder:
         N: int,
         dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
-        """Emit N pipeline stages for an exact DELAY FIXED with Euler integration.
+        """Emit an N-stage pipeline for an exact DELAY FIXED with Euler integration.
 
-        With Euler solver and dt = time_step, each stage shifts a value by exactly
-        one time step, giving a total transport delay of N * time_step.
-        All stages are initialised to ``initial_expr``.
+        The stages are one array stock ``_df_pipe_<identifier>`` with the stage
+        as its first index (then the variable's dimensions), so that a long
+        delay (a delay time of hundreds of time steps) is one comprehension
+        and not hundreds of variables.  With Euler and dt = time_step, each
+        stage shifts a value by exactly one time step, giving a total
+        transport delay of N * time_step.  All stages start at
+        ``initial_expr``.
         """
         dims = dims or []
-        equations: List[str] = []
         ts_expr = self.control_vals.get("time_step") or "time_step"
+        pipe_name = f"_df_pipe_{identifier}"
+        self.namespace.namespace[f"__internal_df_pipe_{identifier}"] = pipe_name
+        idx_vars = self._idx_vars(len(dims))
+        cells = ", ".join(["_k"] + idx_vars)
+        prev = ", ".join(["_k - 1"] + idx_vars)
+        last = ", ".join([str(N)] + idx_vars)
+        for_clause = ", ".join(
+            ["_k in 1:" + str(N)] + ([self._for_clause(dims, idx_vars)] if dims else [])
+        )
+        ranges = ", ".join([f"1:{N}"] + ([self._range_str(dims)] if dims else []))
+        self.stock_decls.append(f"@variables {pipe_name}(t)[{ranges}]")
+        # One u0 entry per cell of the variable, for all its stages
+        for idx_combo in itertools.product(*[range(1, size + 1) for _, size in dims]):
+            expr_i = initial_expr
+            for iv, idx in zip(idx_vars, idx_combo):
+                expr_i = expr_i.replace(iv, str(idx))
+            idx_s = ", ".join([f"1:{N}"] + [str(i) for i in idx_combo])
+            self.u0_entries.append(f"{pipe_name}[{idx_s}] => {expr_i}")
 
+        equations = [
+            f"[D({pipe_name}[{cells}]) ~ "
+            f"((_k == 1 ? {input_expr} : {pipe_name}[{prev}]) - {pipe_name}[{cells}]) "
+            f"/ ({ts_expr}) for {for_clause}]..."
+        ]
         if dims:
-            ndim = len(dims)
-            idx_vars = self._idx_vars(ndim)
-            for_clause = self._for_clause(dims, idx_vars)
             idx_str_t = ", ".join(idx_vars)
-            ranges_list = [range(1, size + 1) for _, size in dims]
-
-            prev_expr_template = input_expr  # pipe_0 = input
-            for k in range(1, N + 1):
-                pipe_name = f"_df_pipe_{k}_{identifier}"
-                self.namespace.namespace[f"__internal_df_pipe_{k}_{identifier}"] = pipe_name
-                self.stock_decls.append(
-                    f"@variables {pipe_name}(t)[{self._range_str(dims)}]"
-                )
-                # Inline the initial_expr directly — it's already the Julia expression
-                for idx_combo in itertools.product(*ranges_list):
-                    expr_i = initial_expr
-                    for iv, idx in zip(idx_vars, idx_combo):
-                        expr_i = expr_i.replace(iv, str(idx))
-                    idx_s = ", ".join(str(v) for v in idx_combo)
-                    self.u0_entries.append(f"{pipe_name}[{idx_s}] => {expr_i}")
-
-                if k < N:
-                    # Intermediate stage: D(pipe_k) ~ (prev - pipe_k) / time_step
-                    equations.append(
-                        f"[D({pipe_name}[{idx_str_t}]) ~ "
-                        f"({prev_expr_template.replace(idx_str_t, idx_str_t)} - {pipe_name}[{idx_str_t}]) / ({ts_expr}) "
-                        f"for {for_clause}]..."
-                    )
-                else:
-                    # Last stage feeds the output identifier directly
-                    self.aux_decls.append(
-                        f"@variables {identifier}(t)[{self._range_str(dims)}]"
-                    )
-                    equations.append(
-                        f"[D({pipe_name}[{idx_str_t}]) ~ "
-                        f"({prev_expr_template} - {pipe_name}[{idx_str_t}]) / ({ts_expr}) "
-                        f"for {for_clause}]..."
-                    )
-                    equations.append(
-                        f"[{identifier}[{idx_str_t}] ~ {pipe_name}[{idx_str_t}] for {for_clause}]..."
-                    )
-
-                prev_expr_template = f"{pipe_name}[{idx_str_t}]"
-            return equations
-
-        # ---- Scalar case ----
-        prev_expr = input_expr
-        for k in range(1, N + 1):
-            pipe_name = f"_df_pipe_{k}_{identifier}"
-            self.namespace.namespace[f"__internal_df_pipe_{k}_{identifier}"] = pipe_name
-            self.stock_decls.append(f"@variables {pipe_name}(t)")
-            self.u0_entries.append(f"{pipe_name} => {initial_expr}")
+            self.aux_decls.append(f"@variables {identifier}(t)[{self._range_str(dims)}]")
             equations.append(
-                f"D({pipe_name}) ~ ({prev_expr} - {pipe_name}) / ({ts_expr})"
+                f"[{identifier}[{idx_str_t}] ~ {pipe_name}[{last}] "
+                f"for {self._for_clause(dims, idx_vars)}]..."
             )
-            prev_expr = pipe_name
-
-        # Output variable is the last pipeline stage
-        self.aux_decls.append(f"@variables {identifier}(t)")
-        equations.append(f"{identifier} ~ {prev_expr}")
+        else:
+            self.aux_decls.append(f"@variables {identifier}(t)")
+            equations.append(f"{identifier} ~ {pipe_name}[{N}]")
         return equations
 
     # ------------------------------------------------------------------
@@ -2256,52 +2484,16 @@ class JuliaSectionBuilder:
         identifier: str,
         ast,
         visitor: "JuliaASTVisitor",
+        dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
-        """Expand TREND(input, average_time, initial_trend) into an ODE.
+        """Expand TREND(input, average_time, initial_trend), as Python PySD
+        (``Trend``): a smooth level ``_sm`` with
 
-        Introduces a smooth level ``_sm_{identifier}`` that tracks the
-        exponential moving average of the input:
-
-            D(_sm) ~ (input - _sm) / average_time
-
-        Then the trend (fractional growth rate) is:
-
-            output ~ (input - _sm) / (average_time * _sm)
-
-        The smooth level is initialised so that at t=0 the output equals
-        ``initial_trend``:
-
-            _sm(0) = input(0) / (1 + initial_trend * average_time)
-
-        We use the simpler ``input(0)`` approximation (same as PySD's
-        Trend stateful initialisation) and rely on the model's initial
-        conditions to provide a consistent starting point.
+            _sm(0) = input / (1 + initial_trend * average_time)
+            D(_sm) = (input - _sm) / average_time
+            output = ZIDZ(input - _sm, average_time * |_sm|)
         """
-        input_expr = visitor.visit(ast.input)
-        avg_time_expr = visitor.visit(ast.average_time)
-        initial_trend_expr = visitor.visit(ast.initial_trend)
-
-        sm_name = f"_sm_{identifier}"
-        self.namespace.namespace[f"__internal_sm_{identifier}"] = sm_name
-        self.stock_decls.append(f"@variables {sm_name}(t)")
-        # u0: _sm = input / (1 + initial_trend * average_time)
-        # We approximate the initial input as the initial_trend expression;
-        # a better approximation requires evaluating the input at t0.
-        # Use the same formula as PySD: sm0 = input0 (the Trend stateful
-        # initialises its smooth to input/1 when initial_trend is given).
-        # We store the initial as a formula that Julia will evaluate at t=0.
-        self.u0_entries.append(
-            f"{sm_name} => {input_expr} / (1.0 + ({initial_trend_expr}) * ({avg_time_expr}))"
-        )
-
-        self.aux_decls.append(f"@variables {identifier}(t)")
-        return [
-            f"D({sm_name}) ~ ({input_expr} - {sm_name}) / ({avg_time_expr})",
-            (
-                f"{identifier} ~ ifelse(iszero({sm_name}), {initial_trend_expr}, "
-                f"({input_expr} - {sm_name}) / (({avg_time_expr}) * {sm_name}))"
-            ),
-        ]
+        return self._expand_trend_like(identifier, ast, visitor, dims, forecast=False)
 
     # ------------------------------------------------------------------
     # Forecast expansion
@@ -2312,36 +2504,53 @@ class JuliaSectionBuilder:
         identifier: str,
         ast,
         visitor: "JuliaASTVisitor",
+        dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
-        """Expand FORECAST(input, average_time, horizon) = input*(1 + TREND*horizon).
+        """Expand FORECAST(input, average_time, horizon, initial_trend), as
+        Python PySD (``Forecast``): the same smooth level as TREND, with
 
-        FORECAST internally computes a TREND and projects it forward by
-        *horizon*.  We expand it inline, introducing the same internal
-        smooth level as ``_expand_trend``.
+            _sm(0) = input / (1 + initial_trend)
+            output = input * (1 + ZIDZ(input - _sm, average_time * _sm) * horizon)
         """
-        input_expr = visitor.visit(ast.input)
-        avg_time_expr = visitor.visit(ast.average_time)
-        horizon_expr = visitor.visit(ast.horizon)
-        initial_trend_expr = visitor.visit(ast.initial_trend)
+        return self._expand_trend_like(identifier, ast, visitor, dims, forecast=True)
+
+    def _expand_trend_like(self, identifier, ast, visitor, dims, forecast: bool) -> List[str]:
+        """TREND and FORECAST, scalar or over any number of dimensions."""
+        dims = dims or []
+        idx = self._idx_vars(len(dims))
+        vis = self._nd_visitor(dims, idx) if dims else visitor
+        input_expr = vis.visit(ast.input)
+        avg_time_expr = vis.visit(ast.average_time)
+        initial_trend_expr = vis.visit(ast.initial_trend)
 
         sm_name = f"_sm_{identifier}"
         self.namespace.namespace[f"__internal_sm_{identifier}"] = sm_name
-        self.stock_decls.append(f"@variables {sm_name}(t)")
-        self.u0_entries.append(
-            f"{sm_name} => {input_expr} / (1.0 + ({initial_trend_expr}) * ({avg_time_expr}))"
-        )
+        self.needed_helpers.add("pysd_zidz")
+        cell = ", ".join(idx)
+        sm = f"{sm_name}[{cell}]" if dims else sm_name
+        if forecast:
+            start = f"{input_expr} / (1.0 + ({initial_trend_expr}))"
+            out = (f"{input_expr} * (1.0 + pysd_zidz({input_expr} - {sm}, "
+                   f"({avg_time_expr}) * {sm}) * ({vis.visit(ast.horizon)}))")
+        else:
+            start = f"{input_expr} / (1.0 + ({initial_trend_expr}) * ({avg_time_expr}))"
+            out = f"pysd_zidz({input_expr} - {sm}, ({avg_time_expr}) * abs({sm}))"
+        rate = f"({input_expr} - {sm}) / ({avg_time_expr})"
 
-        # trend = (input - sm) / (avg_time * sm)
-        # forecast = input * (1 + trend * horizon)
-        self.aux_decls.append(f"@variables {identifier}(t)")
+        if not dims:
+            self.stock_decls.append(f"@variables {sm_name}(t)")
+            self.u0_entries.append(f"{sm_name} => {start}")
+            self.aux_decls.append(f"@variables {identifier}(t)")
+            return [f"D({sm_name}) ~ {rate}", f"{identifier} ~ {out}"]
+
+        for_clause = self._for_clause(dims, idx)
+        self.stock_decls.append(f"@variables {sm_name}(t)[{self._range_str(dims)}]")
+        for index, start_i in self._nd_cells(dims, idx, start):
+            self.u0_entries.append(f"{sm_name}[{index}] => {start_i}")
+        self.aux_decls.append(f"@variables {identifier}(t)[{self._range_str(dims)}]")
         return [
-            f"D({sm_name}) ~ ({input_expr} - {sm_name}) / ({avg_time_expr})",
-            (
-                f"{identifier} ~ {input_expr} * (1.0 + "
-                f"ifelse(iszero({sm_name}), {initial_trend_expr}, "
-                f"({input_expr} - {sm_name}) / (({avg_time_expr}) * {sm_name})) "
-                f"* ({horizon_expr}))"
-            ),
+            f"[D({sm}) ~ {rate} for {for_clause}]...",
+            f"[{identifier}[{cell}] ~ {out} for {for_clause}]...",
         ]
 
     # ------------------------------------------------------------------
@@ -2435,34 +2644,73 @@ class JuliaSectionBuilder:
         identifier: str,
         ast,
         visitor: "JuliaASTVisitor",
+        dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
         """Emit PySD.jl allocation helper calls.
 
         ALLOCATE BY PRIORITY → pysd_allocate_by_priority(request, priority, width, supply)
         ALLOCATE AVAILABLE   → pysd_allocate_available(request, pp, avail)
 
-        Both helpers implement the exact Vensim algorithm (not proportional
-        approximation).  They work on concrete Julia vectors at solve time and
-        are compatible with the ODE backend.
+        As in Python PySD, the allocation is along the last dimension: the
+        request (and priority) are vectors along their last subscript, and
+        the priority profiles of ALLOCATE AVAILABLE a matrix (the allocation
+        dimension by the profile, its last subscript).  Each cell of the
+        result takes its element of the allocation with the last loop index;
+        the other subscripts select which allocation it belongs to.
         """
-        self.aux_decls.append(f"@variables {identifier}(t)")
-        if isinstance(ast, AllocateAvailableStructure):
-            request_expr = visitor.visit(ast.request)
-            pp_expr = visitor.visit(ast.pp)
-            avail_expr = visitor.visit(ast.avail)
-            rhs = f"pysd_allocate_available({request_expr}, {pp_expr}, {avail_expr})"
-        else:
-            # AllocateByPriorityStructure
-            request_expr = visitor.visit(ast.request)
-            priority_expr = visitor.visit(ast.priority)
-            width_expr = visitor.visit(ast.width)
-            supply_expr = visitor.visit(ast.supply)
-            rhs = (
-                f"pysd_allocate_by_priority("
-                f"{request_expr}, {priority_expr}, {width_expr}, {supply_expr})"
-            )
+        dims = dims or []
+        if not dims:
+            self.aux_decls.append(f"@variables {identifier}(t)")
+            if isinstance(ast, AllocateAvailableStructure):
+                rhs = (f"pysd_allocate_available({visitor.visit(ast.request)}, "
+                       f"{visitor.visit(ast.pp)}, {visitor.visit(ast.avail)})")
+            else:
+                rhs = (f"pysd_allocate_by_priority({visitor.visit(ast.request)}, "
+                       f"{visitor.visit(ast.priority)}, {visitor.visit(ast.width)}, "
+                       f"{visitor.visit(ast.supply)})")
+            return [f"{identifier} ~ {rhs}"]
 
-        return [f"{identifier} ~ {rhs}"]
+        idx = self._idx_vars(len(dims))
+        vnd = self._nd_visitor(dims, idx)
+        last_dim = dims[-1][0]
+        n = self._jl_n(last_dim)
+
+        def subs_of(arg) -> tuple:
+            if isinstance(arg, ReferenceStructure) and arg.subscripts is not None:
+                return tuple(arg.subscripts.subscripts)
+            return ()
+
+        def vector(arg) -> str:
+            s = subs_of(arg)
+            last = s[-1] if s else last_dim
+            return f"[{vnd.bound_visit(arg, {last: '_v'})} for _v in 1:{n}]"
+
+        if isinstance(ast, AllocateAvailableStructure):
+            s = subs_of(ast.pp)
+            profile = s[-1] if s else None
+            along = s[-2] if len(s) >= 2 else last_dim
+            if profile:
+                # Vensim writes the profile as its first element (pp[branch,
+                # ptype] with pprofile: ptype, ppriority, pwidth, pextra): the
+                # profile dimension is that element's range, by size since it
+                # may have no N_ constant
+                if profile not in self._subs_elems and profile in self._elem_to_range:
+                    profile_range = self._elem_to_range[profile]
+                else:
+                    profile_range = profile
+                n_profile = len(self._subs_elems.get(profile_range, [])) or self._jl_n(profile_range)
+                pp = (f"[{vnd.bound_visit(ast.pp, {along: '_v', profile: '_p'})} "
+                      f"for _v in 1:{n}, _p in 1:{n_profile}]")
+            else:
+                pp = vnd.visit(ast.pp)
+            rhs = (f"pysd_allocate_available({vector(ast.request)}, {pp}, "
+                   f"{vnd.visit(ast.avail)})[{idx[-1]}]")
+        else:
+            rhs = (f"pysd_allocate_by_priority({vector(ast.request)}, "
+                   f"{vector(ast.priority)}, {vnd.visit(ast.width)}, "
+                   f"{vnd.visit(ast.supply)})[{idx[-1]}]")
+        self.aux_decls.append(f"@variables {identifier}(t)[{self._range_str(dims)}]")
+        return [f"[{identifier}[{', '.join(idx)}] ~ {rhs} for {self._for_clause(dims, idx)}]..."]
 
     # ------------------------------------------------------------------
     # DataStructure (tab-file DATA variable) processing
@@ -2724,7 +2972,8 @@ class JuliaSectionBuilder:
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
             self.lookup_const_decls.append(
                 f"const {identifier}_fns = pysd_xlsx_build_lookup_dispatch("
-                f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{ast0.cell}")'
+                f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{ast0.cell}"'
+                f"{self._dispatch_n(comp0)})"
             )
             self.lookup_func_decls.append(
                 f"{identifier}(i, x) = {identifier}_fns[i](x)"
@@ -2739,10 +2988,9 @@ class JuliaSectionBuilder:
         if self.data_format != "json" and len(elem.components) > 1:
             ast0 = elem.components[0].ast
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
-            y_names = []
-            for comp in elem.components:
-                if isinstance(comp.ast, GetLookupsStructure):
-                    y_names.append(comp.ast.cell)
+            y_comps = [comp for comp in elem.components
+                       if isinstance(comp.ast, GetLookupsStructure)]
+            y_names = [comp.ast.cell for comp in y_comps]
             if y_names:
                 # Each component may produce a 1D or 2D lookup.
                 # Use pysd_xlsx_build_lookup_dispatch per component to get
@@ -2752,7 +3000,8 @@ class JuliaSectionBuilder:
                     sub_name = f"{identifier}_{k + 1}"
                     self.lookup_const_decls.append(
                         f"const {sub_name}_fns = pysd_xlsx_build_lookup_dispatch("
-                        f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{y_name}")'
+                        f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{y_name}"'
+                        f"{self._dispatch_n(y_comps[k])})"
                     )
                     sub_dispatch_names.append(f"{sub_name}_fns")
 
@@ -2942,6 +3191,69 @@ class JuliaSectionBuilder:
     # GET DATA processing
     # ------------------------------------------------------------------
 
+    def _place_data_parts_1d(self, identifier: str, data_comps, names) -> Optional[List[str]]:
+        """Data defined one element at a time (``x[a1]``, ``x[a3]``, ``x[a2]``,
+        in any order): each part's series
+        at its element's position in the variable's range, which is how the
+        equations index it, whatever the order of the definitions.  Elements
+        with no definition give NaN."""
+        subs = [list(dc.subscripts[0]) for dc in data_comps]
+        if any(len(s) != 1 or s[0] not in self._elem_to_range for s in subs):
+            return None
+        labels = [s[0] for s in subs]
+        dim = (self._var_dims.get(identifier) or [None])[0]
+        if dim not in self._subs_elems:
+            dim = self._infer_parent_range(labels)
+        elems = self._subs_elems.get(dim, []) if dim else []
+        if not elems or any(lb not in elems for lb in labels):
+            return None
+        placed = ["[_ -> NaN]"] * len(elems)
+        for lb, name in zip(labels, names):
+            placed[elems.index(lb)] = name
+        return placed
+
+    def _keyed_dispatch(self, identifier: str, data_comps) -> Optional[tuple]:
+        """Index the data definitions of a variable by the elements they fix.
+
+        For revenue3[A, X, company] = GET DIRECT DATA(…), revenue3[B, X,
+        company] = …: each definition fixes some subscripts to one element
+        and leaves at most one as a range (read from the columns of its
+        data), at the same position in every definition.  Returns the
+        indices each definition fixes (in the variable's dimensions), the
+        number of subscripts and the position of the range (or None), or
+        None when the definitions do not have that shape.
+        """
+        subs_lists = [list(dc.subscripts[0]) for dc in data_comps]
+        n_pos = len(subs_lists[0])
+        if n_pos < 2 or any(len(s) != n_pos for s in subs_lists):
+            return None
+        dims = list(self._var_dims.get(identifier) or [])
+        if len(dims) != n_pos:
+            dims = []
+            for p in range(n_pos):
+                ranges = [s[p] for s in subs_lists if s[p] in self._subs_elems]
+                dims.append(ranges[0] if ranges else self._elem_to_range.get(subs_lists[0][p]))
+        range_pos = None
+        keys = []
+        for subs in subs_lists:
+            rp = [p for p, s in enumerate(subs) if s in self._subs_elems]
+            if len(rp) > 1 or (rp and range_pos is not None and rp[0] != range_pos):
+                return None
+            if rp:
+                range_pos = rp[0]
+            key = []
+            for p, s in enumerate(subs):
+                if p == range_pos:
+                    continue
+                elems = self._subs_elems.get(dims[p], []) if dims[p] else []
+                if s not in elems:
+                    return None
+                key.append(elems.index(s) + 1)
+            keys.append(tuple(key))
+        if len(set(keys)) != len(keys):
+            return None
+        return keys, n_pos, range_pos
+
     def _process_get_data(
         self,
         elem: "AbstractElement",
@@ -2997,7 +3309,8 @@ class JuliaSectionBuilder:
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
             self.lookup_const_decls.append(
                 f"const {identifier}_fns = pysd_xlsx_build_lookup_dispatch("
-                f'{file_expr}, "{ast0.tab}", "{ast0.time_row_or_col}", "{ast0.cell}")'
+                f'{file_expr}, "{ast0.tab}", "{ast0.time_row_or_col}", "{ast0.cell}"'
+                f"{self._dispatch_n(comp0)})"
             )
             self.lookup_func_decls.append(
                 f"{identifier}(i, x) = {identifier}_fns[i](x)"
@@ -3016,15 +3329,38 @@ class JuliaSectionBuilder:
                 sub_name = f"{identifier}_{k + 1}"
                 self.lookup_const_decls.append(
                     f"const {sub_name}_fns = pysd_xlsx_build_lookup_dispatch("
-                    f'{file_expr}, "{dc.ast.tab}", "{dc.ast.time_row_or_col}", "{dc.ast.cell}")'
+                    f'{file_expr}, "{dc.ast.tab}", "{dc.ast.time_row_or_col}", "{dc.ast.cell}"'
+                    f"{self._dispatch_n(dc)})"
                 )
                 sub_dispatch_names.append(f"{sub_name}_fns")
 
-            fn_list = ", ".join(sub_dispatch_names)
+            keyed = self._keyed_dispatch(identifier, data_comps)
+            if keyed is not None:
+                entries, n_pos, range_pos = keyed
+                args = [f"a{p + 1}" for p in range(n_pos)]
+                key = ", ".join(a for p, a in enumerate(args) if p != range_pos)
+                series = args[range_pos] if range_pos is not None else "1"
+                pairs = ", ".join(
+                    f"({', '.join(map(str, k))},) => {name}"
+                    for k, name in zip(entries, sub_dispatch_names)
+                )
+                self.lookup_const_decls.append(f"const {identifier}_fns = Dict({pairs})")
+                self.lookup_func_decls.append(
+                    f"{identifier}({', '.join(args)}, x) = {identifier}_fns[({key},)][{series}](x)"
+                )
+                self.lookup_register_decls.append(
+                    f"@register_symbolic {identifier}("
+                    + ", ".join(f"{a}::Integer" for a in args) + ", x::Real)"
+                )
+                self.lookup_identifiers.add(identifier)
+                return []
+
+            n_sub_dims = len(self._comp_coords(data_comps[0]))
+            placed = self._place_data_parts_1d(identifier, data_comps, sub_dispatch_names)
+            fn_list = ", ".join(placed or sub_dispatch_names)
             self.lookup_const_decls.append(
                 f"const {identifier}_fns = [{fn_list}]"
             )
-            n_sub_dims = len(self._comp_coords(data_comps[0]))
             if n_sub_dims >= 2:
                 self.lookup_func_decls.append(
                     f"{identifier}(i, j, x) = (i <= length({identifier}_fns) && j <= length({identifier}_fns[i])) ? {identifier}_fns[i][j](x) : {identifier}_fns[j][i](x)"
@@ -3358,7 +3694,8 @@ class JuliaSectionBuilder:
         if len(elem.components) == 1 and isinstance(ast0, GetConstantsStructure):
             cell = ast0.cell
             transpose = cell.endswith('*')
-            clean_cell = cell.rstrip('*')
+            clean_cell = _cell_block(
+                cell.rstrip('*'), self._comp_coords(comp0), transpose)
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
             kw_parts = []
             if transpose:
@@ -3368,6 +3705,14 @@ class JuliaSectionBuilder:
                 f'pysd_xlsx_read_constant({file_expr}, '
                 f'"{ast0.tab}", "{clean_cell}"{kw})'
             )
+
+        # ----- Multi-component 1-D: each definition at its own elements -----
+        # var2[t2] = GET DIRECT CONSTANTS(…), var2[t3] = …, var2[subdim] = …:
+        # the definitions are written in any order, so each one is assigned
+        # to the positions of its elements in the variable's range.
+        placed = self._placed_constants_1d(elem)
+        if placed is not None:
+            return placed
 
         # ----- Multi-component with 2D+ subscripts: fall back to baked-in -----
         comp0_coords = self._comp_coords(elem.components[0])
@@ -3386,7 +3731,8 @@ class JuliaSectionBuilder:
                 cell = comp.ast.cell
                 if cell.endswith('*'):
                     transpose = True
-                clean_cell = cell.rstrip('*')
+                clean_cell = _cell_block(
+                    cell.rstrip('*'), self._comp_coords(comp), cell.endswith('*'))
                 if file_expr is None:
                     file_expr = f'joinpath(@__DIR__, "{comp.ast.file}")'
                     tab = comp.ast.tab
@@ -3431,6 +3777,41 @@ class JuliaSectionBuilder:
             f'pysd_xlsx_read_constant({file_expr}, '
             f'"{tab}", [{specs_str}]{kw})'
         )
+
+    def _placed_constants_1d(self, elem: AbstractElement) -> Optional[str]:
+        """A 1-D constant defined in parts, as a ``let`` block that fills
+        each part's positions (None if the definitions are not 1-D parts of
+        one range, or the JSON data format is used)."""
+        if self.data_format == "json" or len(elem.components) < 2:
+            return None
+        parts = []
+        covered: List[str] = []
+        for comp in elem.components:
+            coords = self._comp_coords(comp)
+            if len(coords) != 1:
+                return None
+            elems = list(next(iter(coords.values())))
+            covered.extend(elems)
+            parts.append((comp, elems))
+        target = next((r for r, e in self._subs_elems.items()
+                       if isinstance(e, list) and sorted(e) == sorted(covered)), None)
+        if target is None:
+            return None
+        order = self._subs_elems[target]
+        lines = [f"let _v = zeros({len(order)})"]
+        for comp, elems in parts:
+            positions = ", ".join(str(order.index(e) + 1) for e in elems)
+            if isinstance(comp.ast, GetConstantsStructure):
+                cell = comp.ast.cell
+                kw = "; transpose=true" if cell.endswith("*") else ""
+                block = _cell_block(cell.rstrip("*"), self._comp_coords(comp), cell.endswith("*"))
+                value = (f'pysd_xlsx_read_constant(joinpath(@__DIR__, "{comp.ast.file}"), '
+                         f'"{comp.ast.tab}", "{block}"{kw})')
+            else:
+                value = format_number(comp.ast)
+            lines.append(f"    _v[[{positions}]] .= {value}")
+        lines += ["    _v", "end"]
+        return "\n".join(lines)
 
     def _read_get_constants_baked(
         self, elem: "AbstractElement", identifier: str
@@ -3589,10 +3970,10 @@ class JuliaSectionBuilder:
         a mix of GCS and literal-value components, each covering a different
         sub-range of one dimension while sharing all other dimensions.
 
-        Example (pymedeas world model):
-            materials_for_o_m_per_capacity_installed_res_elec[RES_ELEC, materials]
-              [RES_ELEC_DISPATCHABLE, materials] = 0   (literal)
-              [RES_ELEC_VARIABLE,     materials] = GCS (Excel data)
+        Example:
+            x[DIM, other]
+              [SUB1, other] = 0   (literal)
+              [SUB2, other] = GCS (Excel data)
 
         The full parent dims are determined by _element_dims, then a numpy
         array is allocated and each component fills its slice.
@@ -3906,7 +4287,7 @@ class JuliaSectionBuilder:
         # OrdinaryDiffEq v7 split Euler into OrdinaryDiffEqLowOrderRK.
         # PySD re-exports the helper functions (pysd_*), the Excel readers
         # (pysd_xlsx_read_*) and DataInterpolations, so it is always imported.
-        uses = ["OrdinaryDiffEq", "PySD", "NCDatasets"]
+        uses = ["OrdinaryDiffEq", "PySD", "NCDatasets", "ComponentArrays"]
         has_lookups = bool(self.lookup_const_decls)
         if has_lookups or extra_packages:
             uses.append("DataInterpolations")
@@ -3916,7 +4297,7 @@ class JuliaSectionBuilder:
             f"# Model {self.model_name}\n"
             f"# Translated using PySD version {__version__}\n\n"
             f"using {', '.join(uses)}\n\n"
-            f'check_compat(v"0.1.0")\n\n'
+            f'check_compat(v"{PYSD_JL_VERSION}")\n\n'
         )
         if self.data_format == "json":
             json_fname = f"{self.path.stem}_data.json"
@@ -3936,7 +4317,7 @@ class JuliaSectionBuilder:
             f"# Model {self.model_name}\n"
             f"# Translated using PySD version {__version__}\n\n"
             f"using {', '.join(uses)}\n\n"
-            f'check_compat(v"0.1.0")\n\n'
+            f'check_compat(v"{PYSD_JL_VERSION}")\n\n'
             "@independent_variables t\n"
             "D = Differential(t)\n\n"
         )
@@ -4033,7 +4414,10 @@ class JuliaSectionBuilder:
         lines.append("            for (varname, (method, nd)) in _nc_data_registry")
         lines.append("                haskey(ds, varname) || continue")
         lines.append("                try")
+        # NetCDF files list time first (PySD/xarray layout); NCDatasets returns
+        # the dimensions reversed, so flip back to (time, dim_1, ..., dim_n).
         lines.append("                    data = Array(ds[varname])")
+        lines.append("                    data = permutedims(data, ndims(data):-1:1)")
         lines.append("                    if nd == 0")
         lines.append("                        _tab_data[varname] = pysd_build_tab_itp(Float64.(vec(data)), ts, method)")
         lines.append("                    elseif nd == 1")
@@ -4061,6 +4445,8 @@ class JuliaSectionBuilder:
         if not self.lookup_const_decls and not self._json_data.get("lookups") \
                 and not self._json_data.get("data"):
             return ""
+        if self.backend == "ode":
+            return ""  # in params()
         lines = ["# Lookup tables"]
         emit_register = (self.backend == "mtk")
         if self.data_format == "json":
@@ -4103,49 +4489,51 @@ class JuliaSectionBuilder:
             lines.append("# Subscript dimension sizes")
             lines.extend(self.subs_const_decls)
             lines.append("")
-        if self.param_decls:
-            lines.append("# Parameters")
-            for decl in self.param_decls:
-                # Convert "@parameters name = value" to "const name = value"
-                if decl.startswith("@parameters "):
-                    val_part = decl[len("@parameters "):]
-                    if " = " in val_part:
-                        name, val = val_part.split(" = ", 1)
-                        name = name.strip()
-                        val = val.strip()
-                        json_consts = self._json_data.get("constants", {})
-                        if self.data_format == "json" and name in json_consts:
-                            entry = json_consts[name]
-                            if entry.get("dims"):
-                                lines.append(
-                                    f'const {name} = pysd_safe(Float64.'
-                                    f'(_model_data["constants"]["{name}"]["values"]))'
-                                )
-                            else:
-                                lines.append(
-                                    f'const {name} = Float64('
-                                    f'_model_data["constants"]["{name}"]["values"])'
-                                )
-                        elif "pysd_xlsx_read_constant" in val:
-                            lines.append(f"const {name} = pysd_safe({val})")
-                        else:
-                            lines.append("const " + val_part)
-                    else:  # pragma: no cover  # all @parameters entries include "= value"
-                        lines.append("const " + val_part)
-                elif decl.startswith("#"):
-                    lines.append(decl)
-                else:  # pragma: no cover  # param_decls only contains @parameters or # prefixed entries
-                    lines.append(decl)
-        if self.ext_const_decls:
-            lines.append("\n# External constants")
-            for decl in self.ext_const_decls:
-                name_eq = decl.split(" = ", 1)
-                if len(name_eq) == 2 and ("pysd_xlsx_read_constant" in decl
-                                          or decl.strip().startswith("const") and "[" in name_eq[1]):
-                    lines.append(f"{name_eq[0]} = pysd_safe({name_eq[1]})")
-                else:
-                    lines.append(decl)
         return "\n".join(lines) + "\n"
+
+    def _ode_constant_decls(self) -> List[str]:
+        """The constants and external constants as ``const name = value``
+        declarations (or ``# comment`` lines), in model order."""
+        lines: List[str] = []
+        for decl in self.param_decls:
+            # "@parameters name = value" -> "const name = value"
+            if decl.startswith("@parameters "):
+                val_part = decl[len("@parameters "):]
+                if " = " in val_part:
+                    name, val = val_part.split(" = ", 1)
+                    name = name.strip()
+                    val = val.strip()
+                    json_consts = self._json_data.get("constants", {})
+                    if self.data_format == "json" and name in json_consts:
+                        entry = json_consts[name]
+                        if entry.get("dims"):
+                            lines.append(
+                                f'const {name} = pysd_safe(Float64.'
+                                f'(_model_data["constants"]["{name}"]["values"]))'
+                            )
+                        else:
+                            lines.append(
+                                f'const {name} = Float64('
+                                f'_model_data["constants"]["{name}"]["values"])'
+                            )
+                    elif "pysd_xlsx_read_constant" in val:
+                        lines.append(f"const {name} = pysd_safe({val})")
+                    elif "[" in name:
+                        lines.append(self._ode_array_constant(name, val))
+                    else:
+                        lines.append("const " + val_part)
+                else:  # pragma: no cover  # all @parameters entries include "= value"
+                    lines.append("const " + val_part)
+            else:
+                lines.append(decl)
+        for decl in self.ext_const_decls:
+            name_eq = decl.split(" = ", 1)
+            if len(name_eq) == 2 and ("pysd_xlsx_read_constant" in decl
+                                      or decl.strip().startswith("const") and "[" in name_eq[1]):
+                lines.append(f"{name_eq[0]} = pysd_safe({name_eq[1]})")
+            else:
+                lines.append(decl)
+        return lines
 
     def _declarations_block_mtk(self) -> str:
         lines: List[str] = []
@@ -4175,19 +4563,13 @@ class JuliaSectionBuilder:
     def _equations_block(self, equations: List[str]) -> str:
         if self.backend == "mtk":
             return self._equations_block_mtk(equations)
-        if not equations:
-            return (
-                "function rhs!(du, u, p, t)\nend\n\n"
-                "function observe(u, t)\n    return Dict{String,Any}()\nend\n"
-            )
-
         # Collect stock names and sizes from u0_entries
         # Each entry is "var => init" or "var[idx] => init"
         stock_info: Dict[str, int] = {}  # name -> count
         for entry in self.u0_entries:
             name = entry.split("=>")[0].strip()
             base = name.split("[")[0]
-            stock_info[base] = stock_info.get(base, 0) + 1
+            stock_info[base] = stock_info.get(base, 0) + self._u0_size(entry)
 
         # Build state variable index map: name -> (start_idx, size)
         stock_indices: Dict[str, int] = {}
@@ -4215,8 +4597,15 @@ class JuliaSectionBuilder:
             else:
                 alg_lines.append(eq)
 
-        # Detect stock dimensionality from ODE equations
+        # Detect stock dimensionality: declarations first (always the full
+        # ranges), then the ODE equations' for-clauses.
         stock_dims: Dict[str, List[str]] = {}
+        for decl in self.stock_decls:
+            m_sd = re.match(r"@variables\s+(\w+)\(t\)\[([^\]]+)\]", decl.strip())
+            if m_sd:
+                ranges = [r.strip() for r in m_sd.group(2).split(",")]
+                if len(ranges) >= 2 and all(r.startswith("1:") for r in ranges):
+                    stock_dims[m_sd.group(1)] = [r[2:] for r in ranges]
         for eq in ode_lines:
             eq_s = eq.strip().rstrip(",")
             if eq_s.startswith("["):
@@ -4225,27 +4614,11 @@ class JuliaSectionBuilder:
                 if m:
                     name = m.group(1)
                     idx_parts = [x.strip() for x in m.group(2).split(",")]
-                    if name not in stock_dims or len(idx_parts) > len(stock_dims[name]):
+                    if name not in stock_dims:
                         # Find dims from for clause
-                        ranges = re.findall(r"in\s+\d+:(\w+)", eq_s)
+                        ranges = re.findall(r"in\s+\d+:(\w+)", _outer_for_clause(eq_s))
                         if ranges:
                             stock_dims[name] = ranges
-
-        # Build state-variable unpacking lines (shared by rhs! and observe)
-        state_lines: List[str] = []
-        for name in stock_indices:
-            idx = stock_indices[name]
-            size = stock_sizes[name]
-            if size == 1:
-                state_lines.append(f"    {name} = u[{idx}]")
-            elif name in stock_dims and len(stock_dims[name]) >= 2:
-                dims = stock_dims[name]
-                dims_str = ", ".join(dims)
-                state_lines.append(
-                    f"    {name} = reshape(@view(u[{idx}:{idx + size - 1}]), {dims_str})"
-                )
-            else:
-                state_lines.append(f"    {name} = @view u[{idx}:{idx + size - 1}]")
 
         # Pre-allocate auxiliary arrays
         # Scan equations for indexed assignments like "var[i] = ..."
@@ -4265,9 +4638,18 @@ class JuliaSectionBuilder:
 
         # First pass: scan ALL equations (LHS AND RHS) for max literal indices
         all_eq_text = "\n".join(alg_lines)
+        # Module-level constants (e.g. GET DIRECT CONSTANTS arrays) are read,
+        # not allocated: a local array would hide them
+        module_names = set(self._const_names_for_observe(set()))
         for m in re.finditer(r"\b(\w+)\[([^\]]+)\]", all_eq_text):
             name = m.group(1)
             if name in stock_indices or name.startswith("du") or name.startswith("u"):
+                continue
+            if name in module_names:
+                continue
+            if "(" in m.group(2):
+                # an index expression such as (1, 0, 0, 2)[_i1]: its commas
+                # are not dimensions, and it has no literal index to size by
                 continue
             indices = [x.strip() for x in m.group(2).split(",")]
             cur = alloc_needed.get(name, [])
@@ -4295,11 +4677,18 @@ class JuliaSectionBuilder:
                     if name not in stock_indices:
                         all_dims = []
                         # Reconstruct dimension order from for clause
-                        for m_for in re.finditer(r"in\s+(?:(\d+:\w+)|\[([^\]]+)\])", eq_s):
+                        for m_for in re.finditer(r"in\s+(?:(\d+:\w+)|\[([^\]]+)\])", _outer_for_clause(eq_s)):
                             if m_for.group(1):
                                 all_dims.append(m_for.group(1).split(":")[1])
                             elif m_for.group(2):
-                                all_dims.append(str(len(m_for.group(2).split(","))))
+                                # A list of element indices ("in [3]" or
+                                # "in [1, 3]"): the array needs room up to the
+                                # largest one, not one row per listed element.
+                                listed = [x.strip() for x in m_for.group(2).split(",")]
+                                if all(x.isdigit() for x in listed):
+                                    all_dims.append(str(max(int(x) for x in listed)))
+                                else:
+                                    all_dims.append(str(len(listed)))
                         cur = alloc_needed.get(name, [])
                         if len(all_dims) >= len(cur):
                             # Merge: symbolic N_* wins over literal; larger literal wins
@@ -4337,110 +4726,436 @@ class JuliaSectionBuilder:
                             pass
                     alloc_needed[name] = cur
 
-        # Build alloc lines (shared by rhs! and observe)
+        # Build alloc lines (shared by rhs! and observe).  The elements the
+        # model does not define stay NaN, as in Python PySD.
         alloc_lines: List[str] = []
         for name, dims in sorted(alloc_needed.items()):
             dims = [d if d != "0" else "100" for d in dims]
-            if len(dims) == 1:
-                alloc_lines.append(f"    {name} = pysd_safe(zeros({dims[0]}))")
-            else:
-                dims_str = ", ".join(dims)
-                alloc_lines.append(f"    {name} = pysd_safe(zeros({dims_str}))")
+            alloc_lines.append(f"    {name} = pysd_safe(fill(NaN, {', '.join(dims)}))")
 
-        # Build aux assignment lines (shared by rhs! and observe), collecting names
         sorted_alg = self._topo_sort_equations(alg_lines, stock_indices)
-        aux_assign_lines: List[str] = []
-        scalar_aux_names: List[str] = []
-        seen_aux: set = set(alloc_needed.keys())
+        return self._ode_model_block(
+            stock_indices, stock_sizes, stock_dims, alloc_needed,
+            alloc_lines, sorted_alg, ode_lines)
+
+    # ------------------------------------------------------------------
+    # ODE model: params(), model!, rhs!, observe
+    # ------------------------------------------------------------------
+
+    def _literal_arrays(self, eqs, dynamic, alloc_needed) -> Dict[str, str]:
+        """Constants defined element by element with plain numbers covering
+        every element (``x[1] = 0.0``, ``x[2] = 1.0``, ...): name -> the
+        whole array as one Julia value (``fill(0.0, N_A)`` when all the
+        numbers are the same, ``Float64[...]`` otherwise; 1-D and 2-D)."""
+        sizes = {}
+        for decl in self.subs_const_decls:
+            m = re.match(r"const (\w+) = (\d+)", decl)
+            if m:
+                sizes[m.group(1)] = int(m.group(2))
+        number = r"-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
+        parts: Dict[str, Dict[Tuple[int, ...], str]] = {}
+        bad: set = set()
+        for lhs, _, _, converted, _ in eqs:
+            if not lhs or lhs in dynamic or lhs not in alloc_needed:
+                continue
+            for ln in converted:
+                m = re.fullmatch(rf"{lhs}\[(\d+(?:, \d+)*)\] = ({number})", ln.strip())
+                if not m:
+                    bad.add(lhs)
+                    break
+                idx = tuple(int(i) for i in m.group(1).split(", "))
+                parts.setdefault(lhs, {})[idx] = m.group(2)
+        out: Dict[str, str] = {}
+        for lhs, cells in parts.items():
+            dims = alloc_needed[lhs]
+            if lhs in bad or len(dims) > 2:
+                continue
+            n = [int(d) if d.isdigit() else sizes.get(d) for d in dims]
+            if None in n or len(cells) != math.prod(n) or any(len(i) != len(n) for i in cells):
+                continue
+            if any(not 1 <= i[k] <= n[k] for i in cells for k in range(len(n))):
+                continue
+            values = {float(v) for v in cells.values()}
+            if len(values) == 1:
+                out[lhs] = f"pysd_safe(fill({format_number(values.pop())}, {', '.join(dims)}))"
+            elif len(n) == 1:
+                out[lhs] = "pysd_safe(Float64[" + ", ".join(
+                    cells[(i,)] for i in range(1, n[0] + 1)) + "])"
+            else:
+                rows = ["  ".join(cells[(i, j)] for j in range(1, n[1] + 1))
+                        for i in range(1, n[0] + 1)]
+                out[lhs] = "pysd_safe(Float64[" + "; ".join(r.replace("  ", " ") for r in rows) + "])"
+        return out
+
+    @staticmethod
+    def _split_trailing_comment(text: str) -> Tuple[str, str]:
+        """``code  # comment`` -> (code, "  # comment"), for a one-line
+        declaration; a ``#`` inside a string is not a comment."""
+        if "\n" in text:
+            return text, ""
+        in_str = False
+        for k, ch in enumerate(text):
+            if ch == '"' and (k == 0 or text[k - 1] != "\\"):
+                in_str = not in_str
+            elif ch == "#" and not in_str:
+                return text[:k].rstrip(), "  " + text[k:]
+        return text, ""
+
+    @staticmethod
+    def _external_paths(code: str) -> str:
+        """Excel and data file paths through ``_file`` and Excel sheets
+        through ``_sheet``, so that ``params(sheets=..., files=...)`` can
+        read the inputs from other sheets or files."""
+        string = r'"(?:[^"\\]|\\.)*"'
+        code = re.sub(rf"joinpath\(@__DIR__, ({string})\)", r"_file(\1)", code)
+        return re.sub(rf"(pysd_xlsx_\w+\()_file\(({string})\), ({string})",
+                      r"\1_file(\2), _sheet(\3)", code)
+
+    def _ode_input_decls(self) -> List[Tuple[Optional[str], str]]:
+        """The model's inputs as ``(name, value)``: lookups and data
+        (``value`` an anonymous function), then constants and external
+        constants.  ``(None, line)`` is a line kept as it is: a comment, or
+        an internal value such as an interpolation the lookup calls."""
+        out: List[Tuple[Optional[str], str]] = []
+
+        def const(decl: str, internal: bool = False) -> None:
+            if decl.startswith("#"):
+                out.append((None, decl))
+                return
+            m = re.match(r"(?:const\s+)?(\w+)\s*=\s*(.*)", decl, re.S)
+            if not m:  # pragma: no cover  # every declaration is "name = value"
+                out.append((None, decl))
+                return
+            name, value = m.group(1), m.group(2)
+            if internal:
+                out.append((None, f"{name} = {value}"))
+            else:
+                out.append((name, value))
+
+        consts, funcs = self._lookup_decls()
+        if consts or funcs:
+            out.append((None, "# Lookups and data"))
+        for decl in consts:
+            const(decl, internal=True)
+        for decl in funcs:
+            m = re.match(r"(\w+)\((.*?)\)\s*=\s*(.*)", decl, re.S)
+            out.append((m.group(1), f"({m.group(2)}) -> {m.group(3)}"))
+        decls = self._ode_constant_decls()
+        if decls:
+            out.append((None, "# Constants"))
+        for decl in decls:
+            const(decl)
+        return out
+
+    def _lookup_decls(self) -> Tuple[List[str], List[str]]:
+        """Lookup and data declarations: (``const x_itp = …``, ``x(x) = …``)."""
+        if self.data_format != "json":
+            return list(self.lookup_const_decls), list(self.lookup_func_decls)
+        consts, funcs = [], []
+        for kind, xs, ys in (("lookups", "x", "y"), ("data", "time", "values")):
+            for key in self._json_data.get(kind, {}):
+                consts.append(
+                    f'const {key}_itp = LinearInterpolation('
+                    f'Float64.(_model_data["{kind}"]["{key}"]["{ys}"]), '
+                    f'Float64.(_model_data["{kind}"]["{key}"]["{xs}"]))')
+                funcs.append(f"{key}(x) = {key}_itp(x)")
+        return consts, funcs
+
+    def _ode_dynamic_names(self, eqs, stock_indices) -> Set[str]:
+        """Variables that change during the run: they depend on time, on a
+        stock, on random numbers or on the ACTIVE INITIAL switch, directly
+        or through other variables.  A variable defined in parts is dynamic
+        if any part is."""
+        dynamic = set(stock_indices) | {"t"}
+        changed = True
+        while changed:
+            changed = False
+            for lhs, rhs_ids, eq, _, _ in eqs:
+                if lhs in dynamic:
+                    continue
+                if (rhs_ids & dynamic or "random" in eq or "_active_initial" in eq
+                        or "pysd_active_initial" in eq or re.search(r"\bt\b", eq)):
+                    dynamic.add(lhs)
+                    changed = True
+        return dynamic
+
+    def _ode_model_block(self, stock_indices, stock_sizes, stock_dims,
+                         alloc_needed, alloc_lines, sorted_alg, ode_lines) -> str:
+        """The ODE model:
+
+        - ``params(; sheets, files, values...)``: the lookups, data and
+          constants, and the equations computed from them alone, as a
+          NamedTuple; any of them can be given by name;
+        - ``_state_axes``: the stocks by name and shape (ComponentArrays);
+        - ``model!(d, s, p, t)``: the other equations; writes the rates of
+          change into ``d`` (unless ``d`` is ``nothing``) and returns the
+          auxiliaries;
+        - ``rhs!`` (for the solver) and ``observe`` (every variable at a
+          state and time), both over ``model!``.
+        """
+        eqs = []
         for eq in sorted_alg:
-            if "Symbolics.scalarize" in eq or ".~" in eq:  # pragma: no cover  # scalarize/.~ equations route to ode_lines at line 4208, never appear in alg_lines
-                continue
             converted = self._convert_eq_to_assignment(eq)
-            # Collect scalar aux variable name from first converted line
-            if converted:
-                m_lhs = re.match(r"\s*(\w+)\s*=", converted[0])
-                if m_lhs:
-                    vname = m_lhs.group(1)
-                    if vname in self._var_comments:
-                        aux_assign_lines.append(f"    # {self._var_comments[vname]}")
-                    if vname not in stock_indices and vname not in seen_aux:
-                        seen_aux.add(vname)
-                        scalar_aux_names.append(vname)
-            aux_assign_lines.extend(f"    {line}" for line in converted)
+            lhs = self._extract_lhs_name(eq)
+            comment = self._var_comments.get(lhs) if lhs else None
+            eqs.append((lhs, self._extract_rhs_identifiers(eq), eq, converted, comment))
+        dynamic = self._ode_dynamic_names(eqs, stock_indices)
 
-        # ------------------------------------------------------------------ #
-        # rhs!(du, u, p, t)                                                  #
-        # ------------------------------------------------------------------ #
-        func_lines = ["function rhs!(du, u, p, t)"]
-        func_lines.append("    # State variables")
-        func_lines.extend(state_lines)
-        func_lines.append("")
-        func_lines.append("    # Auxiliaries")
-        if alloc_lines:
-            func_lines.extend(alloc_lines)
-            func_lines.append("")
-        func_lines.extend(aux_assign_lines)
-
-        # Create reshaped views of du for multi-dimensional stocks
-        func_lines.append("")
-        func_lines.append("    # Derivatives")
-        for name in stock_indices:
-            if name in stock_dims and len(stock_dims[name]) >= 2:
-                idx = stock_indices[name]
-                size = stock_sizes[name]
-                dims = stock_dims[name]
-                dims_str = ", ".join(dims)
-                func_lines.append(
-                    f"    du_{name} = reshape(@view(du[{idx}:{idx + size - 1}]), {dims_str})"
-                )
-        _emitted_stock_comments: set = set()
-        for eq in ode_lines:
-            if "Symbolics.scalarize" in eq or ".~" in eq:  # pragma: no cover  # these forms only appear in alg_lines, not ode_lines
+        const_alloc = [ln for ln in alloc_lines
+                       if re.match(r"\s*(\w+)", ln).group(1) not in dynamic]
+        dyn_alloc = [ln for ln in alloc_lines
+                     if re.match(r"\s*(\w+)", ln).group(1) in dynamic]
+        computed, dyn_names = [], []
+        for lhs, _, _, _, _ in eqs:
+            if not lhs:  # pragma: no cover  # every equation the builder writes names its variable
                 continue
-            # Prepend comment for the stock variable (once per stock)
-            m_stock = re.match(r"\[?D\((\w+)", eq.strip())
-            if m_stock:
-                sname = m_stock.group(1)
-                if sname in self._var_comments and sname not in _emitted_stock_comments:
-                    func_lines.append(f"    # {self._var_comments[sname]}")
-                    _emitted_stock_comments.add(sname)
-            converted = self._convert_ode_to_du(eq, stock_indices)
-            for line in converted:
-                func_lines.append(f"    {line}")
+            target = dyn_names if lhs in dynamic else computed
+            if lhs not in target and lhs not in stock_indices:
+                target.append(lhs)
+        for name in alloc_needed:
+            if name in stock_indices:  # pragma: no cover  # the allocation scan leaves stocks out
+                continue
+            target = dyn_names if name in dynamic else computed
+            if name not in target:
+                target.append(name)
 
-        func_lines.append("    return nothing")
-        func_lines.append("end")
+        inputs = self._ode_input_decls()
+        input_names = [name for name, _ in inputs if name]
+        p_names = input_names + [n for n in computed if n not in input_names]
+        self._ode_p_names = set(p_names)
 
-        # ------------------------------------------------------------------ #
-        # observe(u, t) — reconstruct every variable at a given state/time   #
-        # ------------------------------------------------------------------ #
-        obs_lines = ["function observe(u, t)"]
-        obs_lines.append("    # State variables")
-        obs_lines.extend(state_lines)
-        obs_lines.append("")
-        obs_lines.append("    # Auxiliaries")
-        if alloc_lines:
-            obs_lines.extend(alloc_lines)
-            obs_lines.append("")
-        obs_lines.extend(aux_assign_lines)
-        obs_lines.append("")
-        # Module-level consts (INITIAL, GET CONSTANTS, etc.) are in scope inside
-        # observe because they are module globals — just reference them by name.
-        const_names = self._const_names_for_observe(set(stock_indices) | seen_aux)
-        obs_lines.append("")
-        obs_lines.append("    return Dict{String,Any}(")
-        for name in list(stock_indices.keys()) + list(alloc_needed.keys()) + scalar_aux_names + const_names:
-            obs_lines.append(f'        "{name}" => {name},')
-        obs_lines.append("    )")
-        obs_lines.append("end")
+        # params(): inputs, then what is computed from them alone
+        lines = [
+            '"""',
+            "    params(; sheets = Dict(), files = Dict(), values...)",
+            "",
+            "The model's lookups, data and constants, and the variables computed",
+            "from them alone, by name.  `values` gives any of them another value",
+            "(`name = value`: a number or an array of the variable's size for a",
+            "constant; a function, an `(x, y)` series or an interpolation for a",
+            "lookup or data); what is computed from them follows.  `sheets` and",
+            "`files` read the Excel inputs from other sheets or files (a Dict from",
+            "the name in the model to the new one).",
+            '"""',
+            "function params(; sheets = Dict{String,String}(), files = Dict{String,String}(), values...)",
+            "    _given = Dict{Symbol,Any}(values)",
+            "    _sheets, _files = Dict{String,String}(sheets), Dict{String,String}(files)",
+            "    _file(f) = pysd_file(@__DIR__, f, _files)",
+            "    _sheet(s) = get(_sheets, s, s)",
+            "",
+        ]
+        for name, value in inputs:
+            value = self._external_paths(value)
+            if name is None:
+                lines.extend("    " + ln for ln in value.split("\n"))
+                continue
+            value, comment = self._split_trailing_comment(value)
+            text = f"{name} = pysd_input(_given, :{name}, {value}){comment}"
+            lines.extend("    " + ln for ln in text.split("\n"))
+        last_part = {lhs: k for k, (lhs, *_rest) in enumerate(eqs) if lhs}
+        literal = self._literal_arrays(eqs, dynamic, alloc_needed)
+        const_alloc = [ln for ln in const_alloc
+                       if re.match(r"\s*(\w+)", ln).group(1) not in literal]
+        body: List[str] = []
+        commented: set = set()
+        for k, (lhs, _, _, converted, comment) in enumerate(eqs):
+            if lhs in dynamic:
+                continue
+            if comment and lhs not in commented:
+                # a variable defined in parts: its description once
+                commented.add(lhs)
+                body.append(f"    # {comment}")
+            if lhs in literal:
+                # numbers for every element: one array
+                if last_part[lhs] == k:
+                    body.append(f"    {lhs} = pysd_input(_given, :{lhs}, {literal[lhs]})")
+                continue
+            last = lhs and last_part[lhs] == k and lhs not in stock_indices
+            single = (last and len(converted) == 1 and lhs not in alloc_needed
+                      and converted[0].startswith(f"{lhs} = ")
+                      and [e[0] for e in eqs].count(lhs) == 1)
+            if single:
+                # one line: the value is the default of the input
+                value, trailing = self._split_trailing_comment(converted[0][len(lhs) + 3:])
+                body.append(f"    {lhs} = pysd_input(_given, :{lhs}, {value}){trailing}")
+                continue
+            body.extend(f"    {ln}" for ln in converted)
+            if last:
+                body.append(f"    {lhs} = pysd_input(_given, :{lhs}, {lhs})")
+        if const_alloc or body:
+            if lines[-1] != "":
+                lines.append("")
+            lines.append("    # Computed from the constants")
+            lines += const_alloc + _fold_cell_loops(_fold_number_cells(body))
+        lines.append("")
+        lines += _wrap_list("    p = (; ", p_names, ")")
+        lines.append("    pysd_check_inputs(_given, p)")
+        fixed = {k: v for k, v in self._fixed_inputs.items() if k in p_names}
+        if fixed:
+            # values the translation used: a new one needs a new translation
+            lines.append("    pysd_check_fixed(_given, (; " + ", ".join(
+                f'{k} = "{v}"' for k, v in sorted(fixed.items())) + "))")
+        lines.append("    return p")
+        lines += ["end", ""]
 
-        return "\n".join(func_lines) + "\n\n" + "\n".join(obs_lines) + "\n"
+        # State: named, shaped
+        axes = []
+        self._ode_stock_ndims = {}
+        for name in stock_indices:
+            size = stock_sizes[name]
+            if size == 1:
+                axes.append(f"{name} = 0.0")
+                self._ode_stock_ndims[name] = 0
+            elif name in stock_dims and len(stock_dims[name]) >= 2:
+                axes.append(f"{name} = zeros({', '.join(stock_dims[name])})")
+                self._ode_stock_ndims[name] = len(stock_dims[name])
+            else:
+                axes.append(f"{name} = zeros({size})")
+                self._ode_stock_ndims[name] = 1
+        lines.append("# Stocks by name and shape; the solver sees one flat vector")
+        lines += _wrap_list("const _state_axes = getaxes(ComponentArray(; ", axes, "))")
+        lines.append("_named(u) = u isa ComponentArray ? u : ComponentArray(u, _state_axes)")
+        lines.append("")
+
+        lines.append("# The rates of change of the stocks (into d, unless it is nothing) and")
+        lines.append("# the variables that change during the run, at the state s and time t")
+        lines.append("function model!(d, s, p, t)")
+        if p_names:
+            lines += _wrap_list("    (; ", p_names, ") = p")
+        for name in stock_indices:
+            lines.append(f"    {name} = s.{name}")
+        lines.append("")
+        lines += dyn_alloc
+        commented = set()
+        dyn_lines: List[str] = []
+        for lhs, _, _, converted, comment in eqs:
+            if lhs not in dynamic:
+                continue
+            if comment and lhs not in commented:
+                commented.add(lhs)
+                dyn_lines.append(f"    # {comment}")
+            dyn_lines.extend(f"    {ln}" for ln in converted)
+        lines += _fold_cell_loops(_fold_number_cells(dyn_lines))
+        if ode_lines:
+            lines.append("")
+            lines.append("    # Rates of change")
+            lines.append("    if d !== nothing")
+            rate_lines: List[str] = []
+            for name in stock_indices:
+                if name in stock_dims and len(stock_dims[name]) >= 2:
+                    lines.append(f"        du_{name} = d.{name}")
+            commented: set = set()
+            for eq in ode_lines:
+                m_stock = re.match(r"\[?D\((\w+)", eq.strip())
+                if m_stock and m_stock.group(1) not in commented:
+                    commented.add(m_stock.group(1))
+                    if m_stock.group(1) in self._var_comments:
+                        rate_lines.append(f"        # {self._var_comments[m_stock.group(1)]}")
+                for ln in self._convert_ode_to_du(eq, stock_indices):
+                    rate_lines.append("        " + self._du_to_named(ln, stock_indices, stock_sizes))
+            lines += _fold_cell_loops(rate_lines)
+            lines.append("    end")
+        returned = list(dyn_names)
+        if self._dynamic_controls():
+            # Control variables that change during the run, at this time;
+            # INITIAL TIME is the one the run started from
+            def ctrl(expr: str) -> str:
+                return re.sub(r"\b(time_step|saveper|final_time)\b", r"_ctrl_\1", expr)
+            for name, default in (("initial_time", "initial_time"), ("time_step", "1.0"),
+                                  ("saveper", "time_step"), ("final_time", "100.0")):
+                expr = self.control_vals.get(name) or default
+                lines.append(f"    _ctrl_{name} = {ctrl(expr)}")
+                returned.append(f"{name} = _ctrl_{name}")
+        lines += _wrap_list("    return (; ", returned, ")")
+        lines += ["end", ""]
+
+        lines += [
+            "rhs!(du, u, p, t) = (model!(_named(du), _named(u), p isa NamedTuple ? p : _params, t); nothing)",
+            "# the solver's parameters (SciML takes no parameters as NullParameters)",
+            "_problem_p(p) = isempty(p) ? OrdinaryDiffEq.SciMLBase.NullParameters() : p",
+            "",
+            "# Every variable at a state and time, by name",
+            "function observe(u, t; p = _params)",
+            "    s = _named(u)",
+            "    out = Dict{String,Any}(String(k) => v for (k, v) in pairs(p) if !(v isa Function))",
+            "    for k in propertynames(s)",
+            "        out[String(k)] = s[k]",
+            "    end",
+            "    for (k, v) in pairs(model!(nothing, s, p, t))",
+            "        out[String(k)] = v",
+            "    end",
+        ]
+        data = sorted(n for n in self._data_names if n in p_names)
+        if data:
+            lines.append("    # data at this time")
+            for name in data:
+                dims = self._var_dims.get(name, [])
+                if not dims:
+                    lines.append(f'    out["{name}"] = p.{name}(t)')
+                else:
+                    idx = [f"_i{k}" for k in range(len(dims))]
+                    ranges = ", ".join(f"{i} in 1:{self._jl_n(d)}" for i, d in zip(idx, dims))
+                    lines.append(f'    out["{name}"] = [p.{name}({", ".join(idx)}, t) for {ranges}]')
+        if not self._dynamic_controls():
+            lines.append("    # simulation control")
+            for name in self._CONTROL_NAMES:
+                lines.append(f'    out["{name}"] = {name}')
+        lines += ["    return out", "end"]
+        return "\n".join(lines) + "\n"
+
+    @staticmethod
+    def _du_to_named(line: str, stock_indices, stock_sizes) -> str:
+        """A derivative assignment by position (``du[12] = …``,
+        ``du[35 - 1 + _i0] = …``) written by stock name."""
+        starts = {idx: name for name, idx in stock_indices.items()}
+        m = re.match(r"(\s*)du\[(\d+) - 1 \+ (.+?)\] = (.*)$", line)
+        if m and int(m.group(2)) in starts:
+            name = starts[int(m.group(2))]
+            if stock_sizes[name] == 1:   # a one-stage pipeline is a scalar stock
+                return f"{m.group(1)}d.{name} = {m.group(4)}"
+            return f"{m.group(1)}d.{name}[{m.group(3)}] = {m.group(4)}"
+        m = re.match(r"(\s*)du\[(\d+)\] = (.*)$", line)
+        if m:
+            k = int(m.group(2))
+            for name, idx in stock_indices.items():
+                size = stock_sizes[name]
+                if idx <= k < idx + size:
+                    if size == 1:
+                        return f"{m.group(1)}d.{name} = {m.group(3)}"
+                    return f"{m.group(1)}d.{name}[{k - idx + 1}] = {m.group(3)}"
+        return line
 
     def _equations_block_mtk(self, equations: List[str]) -> str:
         if not equations:
             return "eqs = Equation[]\n"
         eq_lines = ",\n    ".join(equations)
         return f"eqs = Equation[\n    {eq_lines},\n]\n"
+
+    @staticmethod
+    def _ode_array_constant(name: str, val: str) -> str:
+        """``const x = …`` for an array constant declared MTK-style.
+
+        ``name`` is ``x[1:N_A, 1:N_B]`` and ``val`` the values in row-major
+        order (as Vensim writes them), possibly followed by a comment.  The
+        ODE backend needs a plain Julia array, which is column-major, so the
+        values are reshaped with the dimensions reversed and permuted back.
+        """
+        base, _, spec = name.partition("[")
+        sizes = [r.split(":", 1)[-1].strip() for r in spec.rstrip("]").split(",")]
+        values, _, comment = val.partition(" #")
+        values = values.strip()
+        if values.startswith("permutedims("):
+            # already an array of the right shape
+            comment = f"  #{comment}" if comment else ""
+            return f"const {base} = {values}{comment}"
+        if values.startswith("[") and not values.startswith("Float64["):
+            values = "Float64" + values
+        comment = f"  #{comment}" if comment else ""
+        if len(sizes) == 1:
+            return f"const {base} = {values}{comment}"
+        perm = ", ".join(str(k) for k in range(len(sizes), 0, -1))
+        return (f"const {base} = permutedims(reshape({values}, "
+                f"{', '.join(reversed(sizes))}), ({perm})){comment}")
 
     def _const_names_for_observe(self, already_known: set) -> List[str]:
         """Return names of module-level consts not yet in the observe Dict.
@@ -4542,11 +5257,13 @@ class JuliaSectionBuilder:
             eq_lhs.append(lhs)
             eq_deps.append(deps)
 
-        # Build name -> equation index map
-        name_to_idx: Dict[str, int] = {}
+        # Build name -> equation indices map: a variable defined element by
+        # element has one equation per part, and all of them come before
+        # the equations that use it
+        name_to_idx: Dict[str, List[int]] = {}
         for i, lhs in enumerate(eq_lhs):
-            if lhs and lhs not in name_to_idx:
-                name_to_idx[lhs] = i
+            if lhs:
+                name_to_idx.setdefault(lhs, []).append(i)
 
         # Kahn's algorithm for topological sort
         n = len(equations)
@@ -4556,8 +5273,10 @@ class JuliaSectionBuilder:
         for i in range(n):
             resolved_deps = set()
             for dep in eq_deps[i]:
-                if dep in name_to_idx:
-                    j = name_to_idx[dep]
+                for j in name_to_idx.get(dep, ()):
+                    # parts of the same variable keep their order
+                    if dep == eq_lhs[i] and j > i:
+                        continue
                     if j != i and j not in resolved_deps:
                         dependents[j].append(i)
                         in_degree[i] += 1
@@ -4686,71 +5405,231 @@ class JuliaSectionBuilder:
                 return [f"du[{idx}] = {expr}"]
         return [eq.replace(" ~ ", " = ", 1)]
 
+    @staticmethod
+    def _u0_size(entry: str) -> int:
+        """Number of state cells of a u0 entry: ``x[1:N, 2] => v`` gives N
+        cells (all stages of a DELAY FIXED pipeline), other entries one."""
+        lhs = entry.split("=>", 1)[0]
+        size = 1
+        for a, b in re.findall(r"\b(\d+):(\d+)\b", lhs):
+            size *= int(b) - int(a) + 1
+        return size
+
+    def _sort_u0_entries(self) -> None:
+        """Order ``u0_entries`` the way the ODE state vector is read back.
+
+        Entries of each stock are kept together (stocks in first-appearance
+        order) and multi-dimensional stocks are listed in Julia's column-major
+        order, so ``reshape(@view(u[a:b]), n0, n1, ...)`` in ``rhs!`` and
+        ``observe`` maps every element to its own initial value.
+        """
+        groups: Dict[str, List[Tuple[Tuple[int, ...], str]]] = {}
+        for entry in self.u0_entries:
+            lhs = entry.split("=>", 1)[0].strip()
+            base, _, idx = lhs.partition("[")
+            try:
+                key = tuple(
+                    0 if ":" in i else int(i) for i in idx.rstrip("]").split(",")
+                ) if idx else ()
+            except ValueError:  # pragma: no cover  # u0 indices are always integer literals
+                key = ()
+            groups.setdefault(base, []).append((key[::-1], entry))
+        self.u0_entries = [
+            entry
+            for items in groups.values()
+            for _, entry in sorted(items, key=lambda item: item[0])
+        ]
+
+    def _u0_assignments(self, u0_entries: List[str], target: str) -> List[str]:
+        """``target.stock = value`` for every stock: the model's stocks, then
+        the internal ones.  A stock whose cells follow one formula is one
+        line (``target.x .= 0.0``, ``target.x .= [src[i] for i in 1:14]``);
+        otherwise one line per cell."""
+        groups: List[Tuple[str, List[Tuple[List[str], str]]]] = []
+        for entry in u0_entries:
+            lhs, rhs = (x.strip() for x in entry.split("=>", 1))
+            base, _, idx = lhs.partition("[")
+            index = [i.strip() for i in idx.rstrip("]").split(",")] if idx else []
+            if not groups or groups[-1][0] != base:
+                groups.append((base, []))
+            groups[-1][1].append((index, rhs))
+        own = [g for g in groups if not g[0].startswith("_")]
+        internal = [g for g in groups if g[0].startswith("_")]
+        lines: List[str] = []
+        for base, cells in own:
+            lines += self._u0_stock_lines(target, base, cells)
+        if internal:
+            lines.append("# the translation's own stocks (DELAY FIXED stages, SAMPLE IF TRUE, ...)")
+            for base, cells in internal:
+                lines += self._u0_stock_lines(target, base, cells)
+        return lines
+
+    def _u0_stock_lines(self, target: str, base: str, cells) -> List[str]:
+        ndims = self._ode_stock_ndims.get(base, 1)
+        name = f"{target}.{base}"
+        if ndims == 0:
+            return [f"{name} = {cells[0][1]}"]
+        pattern = self._u0_pattern(cells)
+        if pattern is not None:
+            kind, value, iterators = pattern
+            if kind == "same":
+                return [f"{name} .= {value}"]
+            if kind == "numbers":
+                return [f"{name} .= [{value}]"]
+            comprehension = f"[{value} for {', '.join(iterators)}]"
+            if ndims != len(iterators):
+                comprehension = f"vec({comprehension})"
+            return [f"{name} .= {comprehension}"]
+        # one line per cell, by its indices (or its position in a flat stock)
+        out, position = [], 1
+        for index, rhs in cells:
+            size = 1
+            for i in index:
+                if ":" in i:
+                    a, _, b = i.partition(":")
+                    size *= int(b) - int(a) + 1
+            if ndims == len(index):
+                op = " .= " if size > 1 else " = "
+                out.append(f"{name}[{', '.join(index)}]{op}{rhs}")
+            elif size > 1:
+                out.append(f"{name}[{position}:{position + size - 1}] .= {rhs}")
+            else:
+                out.append(f"{name}[{position}] = {rhs}")
+            position += size
+        return out
+
+    @staticmethod
+    def _u0_pattern(cells):
+        """The cells of a stock as one formula: ("same", value, []) when all
+        are the same value, ("each", formula, iterators) when they follow one
+        formula of their indices (i, j, k; the first index fastest, the order
+        of the stock's cells), ("numbers", "1.0, 2.0", []) for different
+        numbers of a vector; or None."""
+        first = cells[0][0]
+        n = len(first)
+        if n == 0 or any(len(index) != n for index, _ in cells):
+            return None
+        ranges = {k: v for k, v in enumerate(first) if ":" in v}
+        if any(any((":" in index[k]) != (k in ranges) or (k in ranges and index[k] != ranges[k])
+                   for k in range(n)) for index, _ in cells):
+            return None
+        ints = [k for k in range(n) if k not in ranges]
+        try:
+            values = [[int(index[k]) for k in ints] for index, _ in cells]
+        except ValueError:
+            return None
+        extents = [max(v[j] for v in values) for j in range(len(ints))]
+        expected = [list(reversed(c)) for c in itertools.product(
+            *[range(1, e + 1) for e in reversed(extents)])]
+        if values != expected:
+            return None
+        # each integer of the formulas is the same in every cell (a number of
+        # the formula) or the cell's index at some position (a loop variable)
+        token = r"(?<![\w.])\d+(?![\w.])"
+        number = r"-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
+        if len({re.sub(token, "#", rhs) for _, rhs in cells}) != 1:
+            if not ranges and len(ints) == 1 and all(re.fullmatch(number, rhs) for _, rhs in cells):
+                return ("numbers", ", ".join(rhs for _, rhs in cells), [])
+            return None
+        names = ["i", "j", "k", "l"]
+        if len(ints) > len(names) or any(re.search(rf"\b{v}\b", cells[0][1]) for v in names):
+            names = [f"_i{j}" for j in range(len(ints))]
+        loop = {k: names[j] for j, k in enumerate(ints)}
+        found = [[int(x) for x in re.findall(token, rhs)] for _, rhs in cells]
+        parts = re.split(token, cells[0][1])
+        formula = parts[0]
+        used = False
+        for j in range(len(found[0])):
+            column = [f[j] for f in found]
+            if len(set(column)) == 1:
+                text = str(column[0])
+            else:
+                k = next((k for k in ints
+                          if all(c == v[ints.index(k)] for c, v in zip(column, values))), None)
+                if k is None:
+                    return None
+                text, used = loop[k], True
+            formula += text + parts[j + 1]
+        if not used:
+            return ("same", formula, [])
+        iterators = [f"_ in {ranges[k]}" if k in ranges
+                     else f"{loop[k]} in 1:{extents[ints.index(k)]}" for k in range(n)]
+        return ("each", formula, iterators)
+
     def _u0_block(self) -> str:
         if self.backend == "mtk":
             return self._u0_block_mtk()
         if not self.u0_entries:
-            return "u0 = Float64[]\n"
+            return ("initial_state(p = _params) = Float64[]\n\n"
+                    "u0 = initial_state()\n")
 
-        # Check if any u0 values reference non-constant expressions
-        needs_init_fn = False
-        for entry in self.u0_entries:
-            if "=>" in entry:
-                rhs = entry.split("=>", 1)[1].strip()
-                # If RHS contains variable references (not just numbers/params)
-                tokens = set(re.findall(r"\b([a-z_]\w*)\b", rhs))
-                # Remove known constants/params
-                for t in list(tokens):
-                    if any(f" {t} =" in d or f" {t}[" in d
-                           for d in self.param_decls + self.ext_const_decls):
-                        tokens.discard(t)
-                if tokens - {"time_step", "initial_time", "final_time", "t"}:
-                    needs_init_fn = True
-                    break
+        # Initial values are evaluated at the initial time: Time (t) in them,
+        # e.g. DELAY1(Time, d) starting at Time * d, is the initial time
+        u0_entries = [
+            entry if "=>" not in entry else
+            entry.split("=>", 1)[0] + "=> "
+            + re.sub(r"\bt\b", "initial_time", entry.split("=>", 1)[1].strip())
+            for entry in self.u0_entries
+        ]
+        # Names of variables in an expression; names that are called
+        # (abs(...), mod(...)) are functions
+        var_re = r"\b([a-z_]\w*)\b(?!\s*\()"
+        inputs = self._ode_p_names | {name for name, _ in self._ode_input_decls() if name}
+        controls = {"time_step", "initial_time", "final_time", "saveper", "t"}
+        used: set = set()
+        called: set = set()      # lookups and data, called as functions
+        for entry in u0_entries:
+            value = entry.split("=>", 1)[1]
+            used |= set(re.findall(var_re, value))
+            called |= set(re.findall(r"\b([a-z_]\w*)\s*\(", value))
+        from_p = sorted((used | called) & inputs)
+        # Other variables (auxiliaries, stocks) are read from observe at the
+        # initial time.  Initial values may depend on stocks (e.g. DELAY(stock,
+        # 1) starts at the stock's initial value), so they are evaluated from
+        # the state they define, starting from zeros, until it no longer
+        # changes.
+        from_observe = sorted(used - inputs - controls)
 
-        if needs_init_fn:
-            # Collect all auxiliary identifiers referenced in u0 expressions that
-            # are not module-level constants.  Use observe(zeros, initial_time) to
-            # evaluate them at t=0 so stocks depending on auxiliaries initialise
-            # correctly (e.g. TREND smooth stocks that depend on a dynamic input).
-            dynamic_tokens: set = set()
-            for entry in self.u0_entries:
-                if "=>" in entry:
-                    rhs = entry.split("=>", 1)[1].strip()
-                    tokens = set(re.findall(r"\b([a-z_]\w*)\b", rhs))
-                    for tok in list(tokens):
-                        if any(f" {tok} =" in d or f" {tok}[" in d
-                               for d in self.param_decls + self.ext_const_decls):
-                            tokens.discard(tok)
-                    dynamic_tokens |= tokens - {"time_step", "initial_time", "final_time", "t"}
-
-            n = len(self.u0_entries)
-            lines = [f"u0 = let _obs_init = observe(zeros(Float64, {n}), initial_time)"]
-            for tok in sorted(dynamic_tokens):
-                lines.append(f"    {tok} = get(_obs_init, \"{tok}\", 0.0)")
-            lines.append("    Float64[")
-            for entry in self.u0_entries:
-                if "=>" in entry:
-                    lhs, rhs = entry.split("=>", 1)
-                    lines.append(f"        {rhs.strip()},  # {lhs.strip()}")
-                else:  # pragma: no cover  # all u0_entries use "name => expr" format
-                    lines.append(f"        {entry},")
-            lines.append("    ]")
-            lines.append("end")
-            return "\n".join(lines) + "\n"
+        # local names for the state: s and next, unless the model uses them
+        taken = used | called | set(from_p) | set(from_observe)
+        sv, nv = ("s", "next") if not {"s", "next"} & taken else ("_s", "_next")
+        n = sum(self._u0_size(entry) for entry in u0_entries)
+        lines = [
+            "# The stocks at the initial time, with the constants p",
+            "function initial_state(p = _params)",
+        ]
+        body: List[str] = []
+        if from_p:
+            body += _wrap_list("(; ", from_p, ") = p")
+        body.append(f"{sv} = ComponentArray(zeros({n}), _state_axes)")
+        if not from_observe:
+            body += self._u0_assignments(u0_entries, sv)
+            body.append(f"return getdata({sv})")
         else:
-            lines = []
-            for entry in self.u0_entries:
-                if "=>" in entry:
-                    lhs, rhs = entry.split("=>", 1)
-                    lines.append(f"    {rhs.strip()},  # {lhs.strip()}")
-                else:  # pragma: no cover  # all u0_entries use "name => expr" format
-                    lines.append(f"    {entry},")
-            return "u0 = Float64[\n" + "\n".join(lines) + "\n]\n"
+            n_stocks = len({e.split("=>", 1)[0].split("[")[0].strip() for e in u0_entries})
+            body += [
+                "# Initial values can depend on other stocks' initial values: they",
+                "# are computed again until they settle (each pass settles at least",
+                "# one more stock)",
+                f"for _ in 1:{n_stocks + 1}",
+                f"    _obs_init = observe({sv}, initial_time; p = p)",
+            ]
+            body += [f"    {tok} = get(_obs_init, \"{tok}\", 0.0)" for tok in from_observe]
+            body.append(f"    {nv} = zero({sv})")
+            body += ["    " + ln for ln in self._u0_assignments(u0_entries, nv)]
+            body += [f"    isequal({nv}, {sv}) && return getdata({nv})", f"    {sv} = {nv}", "end",
+                     'error("the initial values do not settle: they depend on each other in a cycle")']
+        if self._ode_active_initial:
+            # ACTIVE INITIAL gives its initial value while the stocks start
+            body = (["_initialising[] = true", "try"] + ["    " + ln for ln in body]
+                    + ["finally", "    _initialising[] = false", "end"])
+        lines += ["    " + ln for ln in body] + ["end"]
+        lines += ["", "u0 = initial_state()"]
+        return "\n".join(lines) + "\n"
 
     def _u0_block_mtk(self) -> str:
         if not self.u0_entries:
-            return "u0 = []\n"
+            return "u0 = Pair{Num, Float64}[]\n"
         # Build param name → numeric value map from param_decls
         # "@parameters name = value" entries
         param_values: Dict[str, str] = {}
@@ -4765,6 +5644,14 @@ class JuliaSectionBuilder:
             if "=>" in entry:
                 lhs, rhs = entry.split("=>", 1)
                 rhs = rhs.strip()
+                m_rng = re.match(r"\s*(\w+)\[(\d+):(\d+)(.*)\]\s*$", lhs)
+                if m_rng:  # all stages of a pipeline cell
+                    for pname, pval in param_values.items():
+                        rhs = re.sub(rf"\b{re.escape(pname)}\b", pval, rhs)
+                    name, a, b, rest = m_rng.groups()
+                    for k in range(int(a), int(b) + 1):
+                        lines.append(f"    {name}[{k}{rest}] => {rhs},")
+                    continue
                 # Substitute param references with numeric values
                 for pname, pval in param_values.items():
                     rhs = re.sub(rf"\b{re.escape(pname)}\b", pval, rhs)
@@ -4773,15 +5660,49 @@ class JuliaSectionBuilder:
                 lines.append(f"    {entry},")
         return "u0 = [\n" + "\n".join(lines) + "\n]\n"
 
+    _CONTROL_NAMES = ("initial_time", "final_time", "time_step", "saveper")
+
+    def _control_unknowns(self, expr: str) -> set:
+        """Names in a control expression that are not module-level values."""
+        module_names = set(self._const_names_for_observe(set()))
+        names = set(re.findall(r"\b([a-z_]\w*)\b(?!\s*\()", expr))
+        return names - set(self._CONTROL_NAMES) - module_names
+
+    def _dynamic_controls(self) -> bool:
+        """Whether a control variable depends on Time or on model variables
+        (e.g. FINAL TIME = IF THEN ELSE(x > 50, Time, 100)).  The ODE
+        backend then evaluates them at every step, as Python PySD."""
+        return self.backend == "ode" and any(
+            self._control_unknowns(self.control_vals.get(name) or "")
+            for name in self._CONTROL_NAMES
+        )
+
     def _control_block(self) -> str:
         it = self.control_vals.get("initial_time") or "0.0"
         ft = self.control_vals.get("final_time") or "100.0"
         ts = self.control_vals.get("time_step") or "1.0"
+        sp = self.control_vals.get("saveper") or "time_step"
+        if self._dynamic_controls():
+            def at_start(expr: str, when: str, default: str) -> str:
+                if self._control_unknowns(expr) <= {"t"}:
+                    return re.sub(r"\bt\b", when, expr)
+                return default
+            return (
+                "# Simulation control.  These change during the run: observe and\n"
+                "# run_model evaluate them at every time; the values here are the\n"
+                "# ones at the initial time (set again from the initial state below).\n"
+                f"initial_time = {at_start(it, '0.0', '0.0')}\n"
+                f"time_step    = {at_start(ts, 'initial_time', '1.0')}\n"
+                f"saveper      = {at_start(sp, 'initial_time', 'time_step')}\n"
+                f"final_time   = {at_start(ft, 'initial_time', 'initial_time')}\n"
+                "tspan = (initial_time, final_time)\n"
+            )
         return (
             "# Simulation control\n"
             f"initial_time = {it}\n"
             f"final_time   = {ft}\n"
             f"time_step    = {ts}\n"
+            f"saveper      = {sp}\n"
             "tspan = (initial_time, final_time)\n"
         )
 
@@ -4791,24 +5712,75 @@ class JuliaSectionBuilder:
         ts = self.control_vals.get("time_step") or "time_step"
         has_tab = bool(self._tab_data_entries)
         tab_param = ", tab_data_files=String[], nc_data_files=String[]" if has_tab else ""
-        tab_load = (
+        tab_load = "{TAB_LOAD}" if has_tab else ""
+        tab_lines = (
             "\n    isempty(tab_data_files) || _load_tab_data!(tab_data_files)"
             "\n    isempty(nc_data_files) || _load_nc_data!(nc_data_files)"
-        ) if has_tab else ""
-        return textwrap.dedent(f"""\
-            prob = ODEProblem(rhs!, u0, tspan)
+        )
+        doc = textwrap.dedent("""\
+            \"\"\"
+                run_model(; params = _params, u0 = initial_state(params), ...)
 
-            function run_model(; u0=u0, tspan=tspan, dt={ts}, solver=Euler(){tab_param}){tab_load}
-                prob_local = remake(prob; u0=u0, tspan=tspan)
-                solve(prob_local, solver; dt=dt, saveat=tspan[1]:dt:tspan[2], adaptive=false)
-            end
+            Simulate the model.  `params` are its constants, lookups and data:
+            `run_model(params = params(name = value, ...))` runs it with other
+            values.  The stocks start from `initial_state(params)` unless `u0`
+            is given.  Other keywords go to `solve` (e.g. `saveat`).
+            \"\"\"
             """)
+        if self._dynamic_controls():
+            return textwrap.dedent(f"""\
+                let _c = observe(u0, initial_time)
+                    global time_step = _c["time_step"]
+                    global saveper = _c["saveper"]
+                    global final_time = _c["final_time"]
+                end
+                tspan = (initial_time, final_time)
+                prob = ODEProblem(rhs!, u0, tspan, _problem_p(_params))
+
+                # The control variables change during the run, so (as Python
+                # PySD) the model takes Euler steps of the current TIME STEP
+                # until Time reaches the current FINAL TIME, and saves every
+                # current SAVEPER from the initial time.
+                """) + doc + textwrap.dedent(f"""\
+                function run_model(; params=_params, u0=nothing{tab_param}){tab_load}
+                    u = u0 === nothing ? initial_state(params) : copy(u0)
+                    du = similar(u)
+                    t = initial_time
+                    ts = Float64[]
+                    us = Vector{{typeof(u)}}()
+                    while true
+                        c = observe(u, t; p = params)
+                        prec = c["time_step"] * 1e-5
+                        elapsed = t - initial_time
+                        if mod(elapsed, c["saveper"]) < prec || mod(-elapsed, c["saveper"]) < prec
+                            push!(ts, t)
+                            push!(us, copy(u))
+                        end
+                        t + prec < c["final_time"] || break
+                        rhs!(du, u, params, t)
+                        u .+= c["time_step"] .* du
+                        t += c["time_step"]
+                    end
+                    return OrdinaryDiffEq.SciMLBase.DiffEqArray(us, ts)
+                end
+                """).replace("{TAB_LOAD}", tab_lines)
+        return "prob = ODEProblem(rhs!, u0, tspan, _problem_p(_params))\n\n" + doc + textwrap.dedent(f"""\
+            function run_model(; params=_params, u0=nothing, tspan=tspan, dt={ts}, solver=Euler(){tab_param}, kwargs...){tab_load}
+                u0 === nothing && (u0 = initial_state(params))
+                solve(ODEProblem(rhs!, u0, tspan, _problem_p(params)), solver; dt=dt, adaptive=false, kwargs...)
+            end
+            """).replace("{TAB_LOAD}", tab_lines)
 
     def _run_function_mtk(self) -> str:
         ts = self.control_vals.get("time_step") or "time_step"
+        # The unknowns are matched to u0 by name (structural_simplify may
+        # reorder them, and may add unknowns from algebraic loops, which start
+        # at 0.0).  saveat is needed so that a system without unknowns is
+        # still saved at every step.
         return textwrap.dedent(f"""\
-            u0_dict = Dict(x => v for (x, v) in zip(unknowns(sys), u0))
-            u0_full = [get(u0_dict, x, 0.0) for x in unknowns(sys)]
+            u0_map = Dict(Symbolics.unwrap(k) => v for (k, v) in u0)
+            u0_full = isempty(unknowns(sys)) ? u0 :
+                [x => get(u0_map, x, 0.0) for x in unknowns(sys)]
             prob = ODEProblem(sys, u0_full, tspan; build_initializeprob = false)
 
             function run_model(; u0=u0_full, tspan=tspan, dt={ts}, solver=Euler())
@@ -4818,18 +5790,24 @@ class JuliaSectionBuilder:
             """)
 
     def _entrypoint_block(self) -> str:
-        """Generate the top-level calls that run the model and save results."""
+        """Generate the calls that run the model and save results.
+
+        They only run when the file is executed (``julia model.jl``), so
+        ``include("model.jl")`` defines the model without simulating it.
+        """
         nc_name = f"{self.model_name}_results.nc"
         if self.backend == "mtk":
             save_call = f'save_results(sol, sys, _dim_labels, joinpath(@__DIR__, "{nc_name}"))'
         else:
             save_call = f'save_results(sol, _state_map, _dim_labels, joinpath(@__DIR__, "{nc_name}"))'
         return textwrap.dedent(f"""\
-            println("Running model…")
-            sol = run_model()
-            println("Saving results to {nc_name}…")
-            {save_call}
-            println("Done.")
+            if abspath(PROGRAM_FILE) == @__FILE__
+                println("Running model…")
+                sol = run_model()
+                println("Saving results to {nc_name}…")
+                {save_call}
+                println("Done.")
+            end
             """)
 
     def _dim_labels_block(self) -> str:
@@ -4860,15 +5838,21 @@ class JuliaSectionBuilder:
             if base not in stock_sizes:
                 stock_order.append(base)
                 stock_sizes[base] = 0
-            stock_sizes[base] += 1
+            stock_sizes[base] += self._u0_size(entry)
 
         lines = ["const _state_map = ["]
         idx = 1
         for name in stock_order:
             size = stock_sizes[name]
             dim_names = self._var_dims.get(name, [])
-            dims_jl = ", ".join(f'"{d}"' for d in dim_names)
-            lines.append(f'    ("{name}", {idx}, String[{dims_jl}]),')
+            # The model's own stocks, by their subscript ranges.  Internal
+            # stocks (_df_pipe_*, _sit_*, ...: the stages of a DELAY FIXED,
+            # the value a SAMPLE IF TRUE holds) are not results, as in
+            # Python PySD, and their cells are not laid out over ranges.
+            if not name.startswith("_") and size == math.prod(
+                    self._subs_sizes.get(d, 0) for d in dim_names):
+                dims_jl = ", ".join(f'"{d}"' for d in dim_names)
+                lines.append(f'    ("{name}", {idx}, String[{dims_jl}]),')
             idx += size
         lines.append("]")
         return "\n".join(lines) + "\n"
@@ -4888,30 +5872,40 @@ class JuliaSectionBuilder:
             )
         return ""
 
-    def _macro_includes_block(self) -> str:
-        """Return ``include(...)`` statements for macro companion files."""
-        if not self._macro_companion_paths:
-            return ""
-        lines = [
-            f'include(joinpath(@__DIR__, "{p.name}"))'
-            for p in self._macro_companion_paths
-        ]
-        return "\n# Macro companion files\n" + "\n".join(lines) + "\n"
-
     def _full_file_content(self, equations: List[str]) -> str:
         needs_di = bool(self.lookup_const_decls)
+        equations_block = self._equations_block(equations)
+        self._ode_active_initial = (self.backend == "ode"
+                                    and "pysd_active_initial(" in equations_block)
+        u0_block = self._u0_block()
+        active_initial = ""
+        if self._ode_active_initial:
+            # ACTIVE INITIAL(expr, initial) is `initial` while the initial
+            # values are computed and `expr` afterwards, as in Python PySD
+            active_initial = (
+                "# ACTIVE INITIAL: its initial value while the initial values\n"
+                "# are computed, its active value afterwards\n"
+                "const _initialising = Ref(false)\n"
+                "_active_initial(expr, initial) = _initialising[] ? initial : expr\n\n"
+            )
+            equations_block = equations_block.replace("pysd_active_initial(", "_active_initial(")
+            u0_block = u0_block.replace("pysd_active_initial(", "_active_initial(")
+        if self.backend == "ode":
+            # the constants are computed once, after the simulation control
+            # (which equations may use)
+            u0_block = "const _params = params()\n\n" + u0_block
         return "".join([
             self._file_header(extra_packages=needs_di),
             self._helpers_block(),
             self._tab_data_block(),
             self._lookup_block(),
-            self._macro_includes_block(),
             self._declarations_block(),
             self._control_block(),
             "\n",
-            self._equations_block(equations),
+            active_initial,
+            equations_block,
             "\n",
-            self._u0_block(),
+            u0_block,
             "\n",
             self._system_block(),
             "\n",
@@ -4969,6 +5963,140 @@ class JuliaSectionBuilder:
 # ---------------------------------------------------------------------------
 # Utilities
 # ---------------------------------------------------------------------------
+
+_NUMBER = r"-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
+_NUMBER_CELL = re.compile(rf"(\s*)(\w+)\[(\d+)\] = ({_NUMBER})")
+
+
+def _fold_number_cells(lines: List[str]) -> List[str]:
+    """Consecutive number assignments to cells of one vector as one line:
+    ``x[1] = 0.0; x[2] = 0.0`` -> ``x[1:2] .= 0.0``; ``x[3] = 0.0;
+    x[5] = 0.0`` -> ``x[[3, 5]] .= 0.0``; different numbers ->
+    ``x[1:3] .= [1.0, 2.0, 3.0]``."""
+    out: List[str] = []
+    k = 0
+    while k < len(lines):
+        m = _NUMBER_CELL.fullmatch(lines[k])
+        if not m:
+            out.append(lines[k])
+            k += 1
+            continue
+        indent, name = m.group(1), m.group(2)
+        run = [(int(m.group(3)), m.group(4))]
+        j = k + 1
+        while j < len(lines):
+            m2 = _NUMBER_CELL.fullmatch(lines[j])
+            if not m2 or m2.group(1) != indent or m2.group(2) != name:
+                break
+            run.append((int(m2.group(3)), m2.group(4)))
+            j += 1
+        idx = [i for i, _ in run]
+        if len(run) == 1 or len(set(idx)) != len(idx):
+            out.extend(lines[k:j])
+        else:
+            if idx == list(range(idx[0], idx[0] + len(idx))):
+                where = f"{idx[0]}:{idx[-1]}"
+            else:
+                where = "[" + ", ".join(str(i) for i in idx) + "]"
+            values = [v for _, v in run]
+            value = values[0] if len(set(float(v) for v in values)) == 1 else \
+                "[" + ", ".join(values) + "]"
+            out.append(f"{indent}{name}[{where}] .= {value}")
+        k = j
+    return out
+
+
+_CELL_LINE = re.compile(r"(\s*)([\w.]+)\[(\d+)\] = (.+)")
+_INT_TOKEN = r"(?<![\w.])\d+(?![\w.])"
+
+
+def _fold_cell_loops(lines: List[str]) -> List[str]:
+    """Consecutive assignments to consecutive cells of one vector that
+    follow one formula of the cell's index, as a loop:
+    ``d.x[2] = f[2] - f[3]; d.x[3] = f[3] - f[4]`` ->
+    ``for i in 2:3  d.x[i] = f[i] - f[i + 1]  end``.  Each integer of the
+    formulas is the same in every line, or the index plus a constant."""
+    out: List[str] = []
+    k = 0
+    while k < len(lines):
+        m = _CELL_LINE.fullmatch(lines[k])
+        if not m or " = " in m.group(4):
+            out.append(lines[k])
+            k += 1
+            continue
+        indent, name = m.group(1), m.group(2)
+        run = [(int(m.group(3)), m.group(4))]
+        j = k + 1
+        while j < len(lines):
+            m2 = _CELL_LINE.fullmatch(lines[j])
+            if (not m2 or m2.group(1) != indent or m2.group(2) != name
+                    or int(m2.group(3)) != run[-1][0] + 1):
+                break
+            run.append((int(m2.group(3)), m2.group(4)))
+            j += 1
+        # groups of consecutive cells with the same formula (the last cell
+        # may differ, as x[n] = f[n] after x[i] = f[i] - f[i + 1])
+        start = 0
+        while start < len(run):
+            skeleton = re.sub(_INT_TOKEN, "#", run[start][1])
+            end = start + 1
+            while end < len(run) and re.sub(_INT_TOKEN, "#", run[end][1]) == skeleton:
+                end += 1
+            group = run[start:end]
+            loop = _loop_formula(group) if len(group) >= 3 else None
+            if loop is None:
+                out.extend(lines[k + start:k + end])
+            else:
+                var, formula = loop
+                out += [f"{indent}for {var} in {group[0][0]}:{group[-1][0]}",
+                        f"{indent}    {name}[{var}] = {formula}",
+                        f"{indent}end"]
+            start = end
+        k = j
+    return out
+
+
+def _loop_formula(run) -> Optional[Tuple[str, str]]:
+    """The formula of cells (index, formula) as one formula of a loop
+    variable, or None."""
+    texts = [f for _, f in run]
+    if len({re.sub(_INT_TOKEN, "#", f) for f in texts}) != 1:
+        return None
+    var = "i" if not any(re.search(r"\bi\b", f) for f in texts) else "_i"
+    found = [[int(x) for x in re.findall(_INT_TOKEN, f)] for f in texts]
+    parts = re.split(_INT_TOKEN, texts[0])
+    formula, used = parts[0], False
+    for c in range(len(found[0])):
+        column = [f[c] for f in found]
+        offsets = {v - idx for v, (idx, _) in zip(column, run)}
+        if len(set(column)) == 1:
+            piece = str(column[0])
+        elif len(offsets) == 1:
+            off = offsets.pop()
+            piece = var if off == 0 else (f"{var} + {off}" if off > 0 else f"{var} - {-off}")
+            used = True
+        else:
+            return None
+        formula += piece + parts[c + 1]
+    return (var, formula) if used else None
+
+
+def _wrap_list(start: str, items: List[str], end: str, width: int = 92) -> List[str]:
+    """``start`` + items separated by commas + ``end``, wrapped at *width*,
+    the continuation lines aligned with the first item."""
+    indent = " " * len(start)
+    lines, line = [], start
+    for k, item in enumerate(items):
+        text = item + ("," if k < len(items) - 1 else end)
+        if line not in (start, indent) and len(line) + 1 + len(text) > width:
+            lines.append(line.rstrip())
+            line = indent
+        line += ("" if line in (start, indent) else " ") + text
+    if not items:
+        line += end
+    lines.append(line)
+    return lines
+
 
 def _path_to_eq_var(path: Path) -> str:
     """Convert a module path like ``modules_model/Sector A/Sub1`` to ``sector_a_sub1_eqs``."""

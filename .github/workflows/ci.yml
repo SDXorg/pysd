@@ -44,7 +44,85 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           file: coverage.xml
+          flag-name: python
+          parallel: true
         if: ${{ matrix.python-version == 3.9 && matrix.os == 'ubuntu-latest' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Julia builder: every Python-pathway test model, translated with each Julia
+  # backend, run and compared with its reference output
+  # (tests/pytest_builders/pytest_julia_reference.py).  Its coverage is merged
+  # with the Python job's, so code reached only through Julia counts too.
+  julia:
+    name: Julia builder (reference models)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write  # lets julia-actions/cache delete old caches
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          # 1.12: on 1.13, ModelingToolkit 10 resolves OrdinaryDiffEq 6.x, whose
+          # install fails ("Unknown package: OrdinaryDiffEqDefault")
+          version: '1.12'
+      - name: Cache Julia depot
+        uses: julia-actions/cache@v3
+      - name: Install Julia packages
+        run: |
+          julia --startup-file=no -e '
+            using Pkg
+            Pkg.activate("pysd_ci", shared=true)
+            Pkg.develop(PackageSpec(path="pysd/builders/julia/PySD.jl"))
+            Pkg.add(["OrdinaryDiffEq", "OrdinaryDiffEqLowOrderRK", "ModelingToolkit",
+                     "Symbolics", "DataInterpolations", "NCDatasets", "JSON3",
+                     "ComponentArrays"])
+            Pkg.precompile()
+          '
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip wheel
+          pip install --prefer-binary -r tests/requirements.txt
+          pip install --prefer-binary -e .
+      - name: Test and coverage
+        env:
+          JULIA_PROJECT: "@pysd_ci"
+          PYSD_JULIA_REQUIRED: "1"
+          PYSD_JULIA_BACKENDS: ode,mtk
+          PYSD_JULIA_MTK: subset  # full MTK set: julia-mtk-full.yml
+        run: |
+          pytest tests/pytest_builders/pytest_julia_reference.py \
+                 tests/pytest_builders/pytest_julia_params.py \
+                 "tests/pytest_builders/pytest_julia.py::TestTidy" --cov=pysd
+          coverage xml
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coverage.xml
+          flag-name: julia
+          parallel: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  coverage:
+    name: Merge coverage
+    needs: [test, julia]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls (finish)
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
+          carryforward: python,julia
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
