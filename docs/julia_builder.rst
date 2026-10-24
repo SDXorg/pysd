@@ -645,10 +645,12 @@ Limitations
 
 - **SAMPLE IF TRUE** uses an ODE hold-stock to track the last sampled value
   and instantaneously outputs ``ifelse(condition, input, hold)`` at each step.
-  Behaviour matches Vensim exactly when using the Euler solver.
+  Behaviour matches Vensim when using the Euler solver (up to the last
+  digit, see *Last digits* below).
 
-- **DELAY FIXED** is implemented as an exact N-stage Euler pipeline
-  (``N = round(delay_time / time_step)``), with both backends.  As in Vensim
+- **DELAY FIXED** is implemented as an N-stage Euler pipeline
+  (``N = round(delay_time / time_step)``), with both backends, exact up to
+  the last digit (see *Last digits* below).  As in Vensim
   and the Python builder, N is fixed by the delay time at the initial time,
   which may be an expression (e.g. ``2.5 * TIME STEP`` or
   ``4 + STEP(2, 15)``).  Only if the delay time cannot be evaluated at
@@ -657,6 +659,15 @@ Limitations
   The stages of each delay are one array stock (``_df_pipe_<name>``, with
   the stage as its first index), so long delays (hundreds of time steps)
   add one loop to the generated code, not one variable per stage.
+
+- **Last digits.**  A few constructs can still differ from Python PySD in
+  the last digit: ``DELAY FIXED`` and ``SAMPLE IF TRUE`` keep their values
+  in the ODE state, so a value is passed on as ``b + (a - b)`` instead of
+  copied; ``SUM`` over an array that Python stores transposed adds the
+  elements in another order; and ``TANH`` uses Julia's function (numpy has
+  its own).  Such differences only change a result where the model compares
+  two values that are equal up to rounding (``x < 0`` with ``x`` about
+  ``1e-16``).
 
 - **Non-integer SMOOTH N order** is rounded to the nearest integer; the
   Python builder supports arbitrary real-valued orders.  A SMOOTH N or
