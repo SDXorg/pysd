@@ -1750,8 +1750,10 @@ class TestJuliaSectionBuilderExpansions:
         comp = AbstractComponent(subscripts=[["sector"], []], ast=delay_ast)
         elem = AbstractElement(name="Out", components=[comp])
         sb = _section_builder_from_elements([elem], subscripts=[sr])
-        with pytest.warns(UserWarning, match="falling back to first-order ODE"):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
             sb.build_section()
+        assert any("falling back to first-order ODE" in str(w.message) for w in caught)
         all_eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
         assert any(e.startswith("[D(_df_out[_i0]) ~ (") and "eps(Float64)" in e
                    and "for _i0 in 1:N_SECTOR" in e for e in all_eqs), all_eqs
